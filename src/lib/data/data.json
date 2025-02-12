@@ -1,0 +1,59 @@
+[{
+	"id": 1,
+	"name": "Shanghai Headquarters",
+	"city": "Shanghai",
+	"province": "Shanghai",
+	"country": "China",
+	"lat": 31.2304,
+	"lng": 121.4737,
+	"type": "office",
+	"description": "Main hub for Asian shipping operations.",
+	"image": "https://example.com/images/shanghai.jpg",
+	"email": "contact@shanghai-office.com",
+	"phone": "+86 21 1234 5678",
+	"ports": [
+		{
+			"id": 101,
+			"name": "Yangshan Port",
+			"lat": 30.6166,
+			"lng": 122.0649,
+			"icon": "https://example.com/icons/port-container.png"
+		},
+		{
+			"id": 102,
+			"name": "Waigaoqiao Port",
+			"lat": 31.3585,
+			"lng": 121.6308,
+			"icon": "https://example.com/icons/port-dock.png"
+		}
+	]
+}, {
+	"id": 2,
+	"name": "Los Angeles Office",
+	"city": "Los Angeles",
+	"state": "California",
+	"country": "USA",
+	"lat": 34.0522,
+	"lng": -118.2437,
+	"type": "office",
+	"description": "Manages North American shipping logistics.",
+	"image": "https://example.com/images/los-angeles.jpg",
+	"email": "contact@la-office.com",
+	"phone": "+1 213 555 6789",
+	"ports": [
+		{
+			"id": 201,
+			"name": "Port of Los Angeles",
+			"lat": 33.7406,
+			"lng": -118.2729,
+			"icon": "https://example.com/icons/port-container.png"
+		},
+		{
+			"id": 202,
+			"name": "Port of Long Beach",
+			"lat": 33.7676,
+			"lng": -118.2142,
+			"icon": "https://example.com/icons/port-dock.png"
+		}
+	]
+}]
