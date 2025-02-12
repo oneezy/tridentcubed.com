@@ -20,6 +20,7 @@ const state = {
   portData: [],
   officeData: [],
   combinedData: [],
+  viewMode: "offices", // Add new state property
 };
 
 // -----------------------------------------------------------------------------
@@ -29,9 +30,21 @@ const state = {
 const setupBaseHTML = () => {
   document.querySelector("#app").innerHTML = `
     <div id="globe"></div>
-    <div class="nav-buttons">
-      <button class="nav-button" id="prevLocation">Previous</button>
-      <button class="nav-button" id="nextLocation">Next</button>
+    <div class="controls-container">
+      <div class="view-mode">
+        <label>
+          <input type="radio" name="viewMode" value="offices" checked>
+          Show Office Ports
+        </label>
+        <label>
+          <input type="radio" name="viewMode" value="all">
+          Show All Ports
+        </label>
+      </div>
+      <div class="nav-buttons">
+        <button class="nav-button" id="prevLocation">Previous</button>
+        <button class="nav-button" id="nextLocation">Next</button>
+      </div>
     </div>
   `;
 };
@@ -174,6 +187,11 @@ const handleMarkerClick = (event, d, markerEl, tooltipEl) => {
   toggleTooltip(markerEl, tooltipEl, d);
   const index = state.combinedData.findIndex((item) => item.id === d.id);
   navigateToLocation(index, false);
+
+  // Refresh data display when in office view mode
+  if (state.viewMode === "offices") {
+    updateGlobeData();
+  }
 };
 
 // 11. Handle navigation (molecule_4)
@@ -258,6 +276,25 @@ const initGlobe = async () => {
   return configureGlobeControls(globe);
 };
 
+// Add new function to filter displayed data
+const updateGlobeData = () => {
+  if (!state.globeInstance) return;
+
+  const filteredData = state.viewMode === "offices"
+    ? [
+      ...state.officeData,
+      ...(state.activeMarkerId?.startsWith("office-")
+        ? state.portData.filter((port) =>
+          state.officeData.find((office) => office.id === state.activeMarkerId)
+            ?.managedPorts.includes(port.name)
+        )
+        : []),
+    ]
+    : state.combinedData;
+
+  state.globeInstance.htmlElementsData(filteredData);
+};
+
 // -----------------------------------------------------------------------------
 // Application Entry Point
 // -----------------------------------------------------------------------------
@@ -265,6 +302,17 @@ const initGlobe = async () => {
 const initApp = async () => {
   setupBaseHTML();
   state.globeInstance = await initGlobe();
+
+  // Add radio button event listeners
+  document.querySelectorAll('input[name="viewMode"]').forEach((radio) => {
+    radio.addEventListener("change", (e) => {
+      state.viewMode = e.target.value;
+      // Reset active marker when changing views
+      state.activeMarkerId = null;
+      state.currentTooltip = null;
+      updateGlobeData();
+    });
+  });
 
   const prevButton = document.querySelector("#prevLocation");
   const nextButton = document.querySelector("#nextLocation");
@@ -290,6 +338,9 @@ const initApp = async () => {
 
   // Initial navigation
   navigateToLocation(0);
+
+  // Initial data update
+  updateGlobeData();
 };
 
 // Start the application when DOM is ready

@@ -6,6 +6,8 @@
   --color-text: rgba(255, 255, 255, 0.87);
   --color-port: #4a90e2;
   --color-office: #ff9900;
+  --blue: #115484;
+  --gray: #69727d;
 
   /* Common values */
   --tooltip-bg: rgba(0, 0, 0, 0.8);
@@ -45,36 +47,25 @@ body {
   cursor: pointer;
 }
 
-.marker {
-  cursor: pointer;
-  width: var(--marker-size);
-  height: var(--marker-size);
-  transition: var(--transition-default);
-  opacity: 0.9;
-  outline: 5px solid lime;
-}
-
-.marker:hover {
-  transform: scale(1.2);
-  opacity: 1;
-}
-
 /* Tooltip base styles */
 .marker-tooltip {
   position: absolute;
   background: var(--tooltip-bg);
+  width: 200px;
+  min-height: 50px;
   color: white;
   padding: 8px;
   border-radius: 4px;
   font-family: var(--font-fallback);
   font-size: 12px;
-  transform: translate(-50%, -120%);
+  transform: translate(-88px, -20px);
   transform-origin: bottom center;
   display: none;
   pointer-events: none;
-  z-index: 100;
+  z-index: 99999999 !important;
   white-space: nowrap;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  bottom: 100%;
 }
 
 /* Port-specific styles */
@@ -102,28 +93,6 @@ body {
   }
 }
 
-/* Navigation */
-.nav-buttons {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  display: flex;
-  gap: 10px;
-}
-
-.nav-button {
-  padding: 10px 20px;
-  background: var(--tooltip-bg);
-  border: 1px solid white;
-  color: white;
-  cursor: pointer;
-  border-radius: 4px;
-  font-family: var(--font-fallback);
-  transition: background 0.3s;
-}
-
 /* Icon base styles */
 .icon {
   display: block;
@@ -146,16 +115,16 @@ body {
 
 .icon-office:hover,
 .icon-office.selected {
-  background-color: blue;
+  background-color: var(--blue);
   scale: var(--icon-scale);
   transform-origin: bottom center;
-  z-index: 9999;
+  z-index: 99999 !important;
 }
 
 /* Port icon styles */
 .icon-port {
-  width: 5px;
-  height: 5px;
+  width: 10px;
+  height: 10px;
   background-color: white;
   opacity: 0.6;
   mask-image: url("https://api.iconify.design/ion:ellipse-sharp.svg");
@@ -167,4 +136,63 @@ body {
   transform-style: preserve-3d;
   pointer-events: auto;
   cursor: pointer;
+}
+
+/* Controls container styles */
+.controls-container {
+  color: black;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 10px;
+}
+
+/* Navigation */
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-button {
+  padding: 10px 20px;
+  background: var(--gray);
+  border: 1px solid white;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: var(--font-fallback);
+  transition: background 0.3s;
+}
+
+/* View mode styles */
+.view-mode {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 5px;
+  display: flex;
+  gap: 20px;
+}
+
+.view-mode label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 10px;
 }
