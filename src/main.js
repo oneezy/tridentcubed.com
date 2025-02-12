@@ -8,6 +8,19 @@ const ASSETS = {
   earthSkin: "/images/skins/earth-blue-marble.jpg",
 };
 
+const ARC_CONFIG = {
+  OPACITY: 0.6,
+  DASH_LENGTH: 0.4,
+  DASH_GAP: 0.2,
+  STROKE_WIDTH: 2, // Default stroke width
+  ANIMATE_TIME: 1500,
+  COLORS: {
+    DEFAULT: ["rgba(0, 255, 0, 0.3)", "rgba(255, 0, 0, 0.3)"],
+    HIGHLIGHT: ["rgba(0, 255, 0, 0.9)", "rgba(255, 0, 0, 0.9)"],
+    DIM: ["rgba(0, 255, 0, 0.075)", "rgba(255, 0, 0, 0.075)"],
+  },
+};
+
 // -----------------------------------------------------------------------------
 // State Management
 // -----------------------------------------------------------------------------
@@ -21,6 +34,7 @@ const state = {
   officeData: [],
   combinedData: [],
   viewMode: "offices", // Add new state property
+  arcData: [], // Add new state property for arcs
 };
 
 // -----------------------------------------------------------------------------
@@ -116,6 +130,44 @@ const processTimezoneOffices = (ports) => {
 };
 
 // -----------------------------------------------------------------------------
+// Arc Processing
+// -----------------------------------------------------------------------------
+
+// 16. Generate arc data for office-port connections (atom_10)
+const generateArcData = (office, ports) => {
+  return ports.map((port) => ({
+    startLat: office.lat,
+    startLng: office.lng,
+    endLat: port.lat,
+    endLng: port.lng,
+    officeName: office.name,
+    portName: port.name,
+  }));
+};
+
+// 17. Configure arc visualization (atom_11)
+const configureArcs = (globe) => {
+  return globe
+    .arcLabel((d) => `${d.officeName} ⟶ ${d.portName}`)
+    .arcStartLat("startLat")
+    .arcStartLng("startLng")
+    .arcEndLat("endLat")
+    .arcEndLng("endLng")
+    .arcColor(() => ARC_CONFIG.COLORS.DEFAULT)
+    .arcDashLength(ARC_CONFIG.DASH_LENGTH)
+    .arcDashGap(ARC_CONFIG.DASH_GAP)
+    .arcDashAnimateTime(ARC_CONFIG.ANIMATE_TIME)
+    .onArcHover((hoverArc) => {
+      globe.arcColor((d) => {
+        if (!hoverArc) return ARC_CONFIG.COLORS.DEFAULT;
+        return d === hoverArc
+          ? ARC_CONFIG.COLORS.HIGHLIGHT
+          : ARC_CONFIG.COLORS.DIM;
+      });
+    });
+};
+
+// -----------------------------------------------------------------------------
 // UI Components
 // -----------------------------------------------------------------------------
 // 8. Toggle tooltip visibility (molecule_1)
@@ -183,7 +235,24 @@ const handleMarkerClick = (event, d, markerEl, tooltipEl) => {
   if (!event || !d || !markerEl || !tooltipEl) return;
 
   event.stopPropagation();
-  console.info(d);
+
+  // Clear existing arcs
+  state.arcData = [];
+
+  // Generate new arcs if clicking an office
+  if (d.type === "office") {
+    const managedPortNames = d.managedPorts.split(", ");
+    const managedPorts = state.portData.filter((port) =>
+      managedPortNames.includes(port.name)
+    );
+    state.arcData = generateArcData(d, managedPorts);
+  }
+
+  // Update globe with new arc data
+  if (state.globeInstance) {
+    state.globeInstance.arcsData(state.arcData);
+  }
+
   toggleTooltip(markerEl, tooltipEl, d);
   const index = state.combinedData.findIndex((item) => item.id === d.id);
   navigateToLocation(index, false);
@@ -271,14 +340,21 @@ const initGlobe = async () => {
     .htmlElementsData(data)
     .htmlElement(createMarkerElement)
     .enablePointerInteraction(true)
-    .pointerEventsFilter(() => true);
+    .pointerEventsFilter(() => true)
+    .arcsData(state.arcData); // Add arcs data
 
-  return configureGlobeControls(globe);
+  return configureArcs(configureGlobeControls(globe));
 };
 
 // Add new function to filter displayed data
 const updateGlobeData = () => {
   if (!state.globeInstance) return;
+
+  // Clear arcs when switching views
+  if (!state.activeMarkerId?.startsWith("office-")) {
+    state.arcData = [];
+    state.globeInstance.arcsData(state.arcData);
+  }
 
   const filteredData = state.viewMode === "offices"
     ? [
