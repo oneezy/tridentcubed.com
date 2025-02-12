@@ -9,13 +9,16 @@ const ASSETS = {
 };
 
 const ARC_CONFIG = {
-  OPACITY: 0.6,
-  DASH_LENGTH: 0.4,
-  DASH_GAP: 0.2,
-  STROKE_WIDTH: 2, // Default stroke width
+  OPACITY: 1,
+  DASH_LENGTH: 0.2,
+  DASH_GAP: 0.1,
   ANIMATE_TIME: 1500,
+  // STROKE_WIDTH: 0.5, // Default stroke width
+  // HOVER_STROKE_WIDTH: 0.8, // Stroke width when hovered
+  // ALTITUDE: 0.1, // Arc curve height
+  // STROKE_RESOLUTION: 24, // Arc smoothness
   COLORS: {
-    DEFAULT: ["rgba(0, 255, 0, 0.3)", "rgba(255, 0, 0, 0.3)"],
+    DEFAULT: ["rgba(0, 255, 0, 0.9)", "rgba(255, 0, 0, 0.9)"],
     HIGHLIGHT: ["rgba(0, 255, 0, 0.9)", "rgba(255, 0, 0, 0.9)"],
     DIM: ["rgba(0, 255, 0, 0.075)", "rgba(255, 0, 0, 0.075)"],
   },
@@ -148,6 +151,9 @@ const generateArcData = (office, ports) => {
 // 17. Configure arc visualization (atom_11)
 const configureArcs = (globe) => {
   return globe
+    .arcStroke(0.4)
+    // .arcAltitude(0.1)
+    // .arcAltitudeAutoScale(0.5)
     .arcLabel((d) => `${d.officeName} ⟶ ${d.portName}`)
     .arcStartLat("startLat")
     .arcStartLng("startLng")
@@ -273,7 +279,7 @@ const navigateToLocation = (index, showTooltip = true) => {
 
   if (state.globeInstance && d) {
     state.globeInstance.pointOfView(
-      { lat: d.lat - 50, lng: d.lng, altitude: 2.5 },
+      { lat: d.lat - 40, lng: d.lng, altitude: 2.5 },
       1000,
     );
 

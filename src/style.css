@@ -107,16 +107,18 @@ body {
 
 /* Office icon styles */
 .icon-office {
-  width: var(--icon-size-office);
-  height: var(--icon-size-office);
+  width: 14px;
+  height: 14px;
   background-color: white;
-  mask-image: url("https://api.iconify.design/mage:map-marker-fill.svg");
+  mask-image: url("https://api.iconify.design/ion:ellipse-sharp.svg");
 }
 
 .icon-office:hover,
 .icon-office.selected {
-  background-color: var(--blue);
-  scale: var(--icon-scale);
+  background-color: white;
+  mask-image: url("https://api.iconify.design/mage:map-marker-fill.svg");
+  width: 42px;
+  height: 42px;
   transform-origin: bottom center;
   z-index: 99999 !important;
 }
