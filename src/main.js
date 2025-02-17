@@ -40,13 +40,80 @@ const state = {
   arcData: [], // Add new state property for arcs
 };
 
+// Add new state handling functions
+// 1. Central state handler (atom_12)
+const updateGlobalState = (newData) => {
+  // Clear existing state
+  if (state.currentTooltip) {
+    state.currentTooltip.style.display = "none";
+  }
+  if (state.activeMarkerId) {
+    const prevIcon = document.querySelector(`#${state.activeMarkerId} .icon`);
+    if (prevIcon) prevIcon.classList.remove("selected");
+  }
+
+  // Update state
+  state.arcData = [];
+  state.activeMarkerId = newData?.id || null;
+  state.currentTooltip = null;
+  state.currentLocationIndex = newData
+    ? state.combinedData.findIndex((item) => item.id === newData.id)
+    : 0;
+
+  // Generate arcs if office
+  if (newData?.type === "office") {
+    const managedPortNames = newData.managedPorts.split(", ");
+    const managedPorts = state.portData.filter((port) =>
+      managedPortNames.includes(port.name)
+    );
+    state.arcData = generateArcData(newData, managedPorts);
+  }
+
+  // Update globe
+  if (state.globeInstance) {
+    state.globeInstance.arcsData(state.arcData);
+
+    // Update displayed data based on view mode
+    updateGlobeData();
+  }
+
+  return newData;
+};
+
+// 2. Location update handler (atom_13)
+const handleLocationUpdate = (
+  data,
+  markerEl,
+  tooltipEl,
+  shouldAnimate = true,
+) => {
+  if (!data || !markerEl || !tooltipEl) return;
+
+  const updatedData = updateGlobalState(data);
+
+  if (state.globeInstance && updatedData) {
+    // Move camera
+    state.globeInstance.pointOfView(
+      { lat: updatedData.lat - 70, lng: updatedData.lng, altitude: 2.5 },
+      shouldAnimate ? 1000 : 0,
+    );
+
+    // Show tooltip after camera movement
+    setTimeout(() => {
+      toggleTooltip(markerEl, tooltipEl, updatedData, true);
+    }, shouldAnimate ? 1100 : 0);
+  }
+};
+
 // -----------------------------------------------------------------------------
 // DOM Utilities
 // -----------------------------------------------------------------------------
 // 3. Setup initial HTML (atom_3)
 const setupBaseHTML = () => {
   document.querySelector("#app").innerHTML = `
-    <div id="globe"></div>
+    <div id="globe-wrapper">
+      <div id="globe"></div>
+    </div>
     <div class="controls-container">
       <div class="view-mode">
         <label>
@@ -70,12 +137,13 @@ const setupBaseHTML = () => {
 const createTooltipContent = (d) =>
   d.type === "office"
     ? `<div><strong>${d.name}</strong></div>
-     <div>${d.description}</div>
-     <div><small>Managed Ports: ${d.managedPorts}</small></div>`
+       <div>${d.description}</div>
+       <div><small>Managed Ports: ${d.managedPorts}</small></div>
+       <div><small>Contact: ${d.email}</small></div>
+       <div><small>Phone: ${d.phone}</small></div>`
     : `<div><strong>${d.name}</strong></div>
-     <div>${d.city}, ${d.province}</div>
-     <div>${d.country}</div>
-     <div>${d.timezone}</div>`;
+       <div>${d.city}, ${d.province}</div>
+       <div>${d.country}</div>`;
 
 // -----------------------------------------------------------------------------
 // Data Processing
@@ -83,26 +151,32 @@ const createTooltipContent = (d) =>
 // 5. Process port data (atom_5)
 const processPortData = (port, index) => ({
   id: `port-${index}`,
-  lat: parseFloat(port.latitude),
-  lng: parseFloat(port.longitude),
-  name: port.name,
+  lat: parseFloat(port.lat),
+  lng: parseFloat(port.lng),
+  name: port.port, // Changed from port.name
   city: port.city,
   country: port.country,
-  province: port.province,
-  timezone: port.timezone,
+  province: port.state_province, // Changed from port.province
+  timezone: "", // Removed timezone since it's not in new data
   type: "port",
 });
 
 // 6. Process office data (atom_6)
-const processOfficeData = (timezone, index, portsInTimezone) => ({
+const processOfficeData = (location, index, portsInLocation) => ({
   id: `office-${index}`,
-  lat: calculateAverage(portsInTimezone, "latitude"),
-  lng: calculateAverage(portsInTimezone, "longitude"),
-  name: `Regional Office: ${timezone}`,
-  timezone: timezone,
+  lat: parseFloat(location.lat),
+  lng: parseFloat(location.lng),
+  name: `Regional Office: ${location.location}`,
+  city: location.city,
+  province: location.province,
+  country: location.country,
   type: "office",
-  description: `Managing ${portsInTimezone.length} ports in ${timezone}`,
-  managedPorts: portsInTimezone.map((p) => p.name).join(", "),
+  description:
+    `Managing ${portsInLocation.length} ports in ${location.location}`,
+  managedPorts: portsInLocation.map((p) => p.port).join(", "),
+  email: location.email,
+  phone: location.phone,
+  location: location.location, // Add location field
 });
 
 // 7. Calculate average coordinates (atom_7)
@@ -219,12 +293,16 @@ const createMarkerElement = (d) => {
   tooltip.className = "marker-tooltip"; // Changed from "tooltip" to "marker-tooltip"
   tooltip.innerHTML = createTooltipContent(d);
 
-  container.onclick = (event) => handleMarkerClick(event, d, icon, tooltip);
+  container.onclick = (event) => handleMarkerClick(event, d);
 
-  // Add hover state management with null checks
-  container.onmouseenter = () => icon && icon.classList.add("selected");
+  // Simplified hover handling
+  container.onmouseenter = () => {
+    if (state.activeMarkerId !== d.id) {
+      icon.classList.add("selected");
+    }
+  };
   container.onmouseleave = () => {
-    if (icon && state.activeMarkerId !== d.id) {
+    if (state.activeMarkerId !== d.id) {
       icon.classList.remove("selected");
     }
   };
@@ -237,65 +315,30 @@ const createMarkerElement = (d) => {
 // Event Handlers
 // -----------------------------------------------------------------------------
 // 10. Handle marker clicks (molecule_3)
-const handleMarkerClick = (event, d, markerEl, tooltipEl) => {
-  if (!event || !d || !markerEl || !tooltipEl) return;
-
+const handleMarkerClick = (event, d) => {
+  if (!event || !d) return;
   event.stopPropagation();
 
-  // Clear existing arcs
-  state.arcData = [];
-
-  // Generate new arcs if clicking an office
-  if (d.type === "office") {
-    const managedPortNames = d.managedPorts.split(", ");
-    const managedPorts = state.portData.filter((port) =>
-      managedPortNames.includes(port.name)
-    );
-    state.arcData = generateArcData(d, managedPorts);
-  }
-
-  // Update globe with new arc data
-  if (state.globeInstance) {
-    state.globeInstance.arcsData(state.arcData);
-  }
-
-  toggleTooltip(markerEl, tooltipEl, d);
-  const index = state.combinedData.findIndex((item) => item.id === d.id);
-  navigateToLocation(index, false);
-
-  // Refresh data display when in office view mode
-  if (state.viewMode === "offices") {
-    updateGlobeData();
-  }
+  state.currentLocationIndex = state.combinedData.findIndex((item) =>
+    item.id === d.id
+  );
+  setActiveLocation(d, true);
 };
 
-// 11. Handle navigation (molecule_4)
+// Update navigateToLocation to properly manage state and navigation (molecule_4)
 const navigateToLocation = (index, showTooltip = true) => {
-  if (index < 0) index = state.combinedData.length - 1;
-  if (index >= state.combinedData.length) index = 0;
+  // Validate index
+  let nextIndex = index;
+  if (nextIndex < 0) nextIndex = state.combinedData.length - 1;
+  if (nextIndex >= state.combinedData.length) nextIndex = 0;
 
-  state.currentLocationIndex = index;
-  const d = state.combinedData[index];
+  const d = state.combinedData[nextIndex];
+  if (!d) return;
 
-  if (state.globeInstance && d) {
-    state.globeInstance.pointOfView(
-      { lat: d.lat - 40, lng: d.lng, altitude: 2.5 },
-      1000,
-    );
+  // Update state index before doing anything else
+  state.currentLocationIndex = nextIndex;
 
-    if (showTooltip) {
-      setTimeout(() => {
-        const container = document.querySelector(`#${d.id}`);
-        if (container) {
-          const icon = container.querySelector(".icon");
-          const tooltip = container.querySelector(".marker-tooltip");
-          if (icon && tooltip) {
-            toggleTooltip(icon, tooltip, d, true);
-          }
-        }
-      }, 1100);
-    }
-  }
+  setActiveLocation(d, showTooltip);
 };
 
 // -----------------------------------------------------------------------------
@@ -319,48 +362,67 @@ const configureGlobeControls = (globe) => {
 // 13. Fetch and process data (organism_1)
 const fetchPortData = async () => {
   try {
-    const response = await fetch(
-      "https://opensheet.justinoneill2007.workers.dev/1XA9G0ByJlULrVkwyfCaZhTaDYhtUZnWIscqIFRRd-A8/ports",
-    );
-    const ports = await response.json();
+    const [portsResponse, locationsResponse] = await Promise.all([
+      fetch(
+        "https://opensheet.justinoneill2007.workers.dev/1_BNtsJr9TaSYRPFAKcAd9pa_TUQyYBfqEZiDvDvkPTw/ports",
+      ),
+      fetch(
+        "https://opensheet.justinoneill2007.workers.dev/1_BNtsJr9TaSYRPFAKcAd9pa_TUQyYBfqEZiDvDvkPTw/locations",
+      ),
+    ]);
+
+    const ports = await portsResponse.json();
+    const locations = await locationsResponse.json();
 
     state.portData = ports.map(processPortData);
-    state.officeData = processTimezoneOffices(ports);
-    state.combinedData = [...state.officeData, ...state.portData];
 
+    // Process office data directly from locations
+    state.officeData = locations.map((location, index) => {
+      // Find ports in this location by matching location strings
+      const portsInLocation = ports.filter(
+        (port) => port.location === location.location,
+      );
+      return processOfficeData(location, index, portsInLocation);
+    });
+
+    state.combinedData = [...state.officeData, ...state.portData];
     return state.combinedData;
   } catch (error) {
-    console.error("Error fetching port data:", error);
+    console.error("Error fetching data:", error);
     return [];
   }
 };
 
-// 14. Initialize globe (organism_2)
+// Modify initGlobe to ensure wrapper has initial classes
 const initGlobe = async () => {
   const globeEl = document.querySelector("#globe");
+  const globeWrapper = document.querySelector("#globe-wrapper");
+
+  // Ensure wrapper has base class
+  if (globeWrapper) {
+    globeWrapper.className = "globe-position";
+  }
+
   const data = await fetchPortData();
 
-  const globe = new Globe(globeEl)
+  state.globeInstance = new Globe(globeEl)
     .backgroundColor("#fff")
     .globeImageUrl(ASSETS.earthSkin)
     .htmlElementsData(data)
     .htmlElement(createMarkerElement)
     .enablePointerInteraction(true)
     .pointerEventsFilter(() => true)
-    .arcsData(state.arcData); // Add arcs data
+    .arcsData(state.arcData);
 
-  return configureArcs(configureGlobeControls(globe));
+  // Configure globe first
+  configureArcs(configureGlobeControls(state.globeInstance));
+
+  return state.globeInstance;
 };
 
 // Add new function to filter displayed data
 const updateGlobeData = () => {
   if (!state.globeInstance) return;
-
-  // Clear arcs when switching views
-  if (!state.activeMarkerId?.startsWith("office-")) {
-    state.arcData = [];
-    state.globeInstance.arcsData(state.arcData);
-  }
 
   const filteredData = state.viewMode === "offices"
     ? [
@@ -380,7 +442,7 @@ const updateGlobeData = () => {
 // -----------------------------------------------------------------------------
 // Application Entry Point
 // -----------------------------------------------------------------------------
-// 15. Initialize application (organism_3)
+// Update initApp with simpler navigation handlers (organism_3)
 const initApp = async () => {
   setupBaseHTML();
   state.globeInstance = await initGlobe();
@@ -389,25 +451,21 @@ const initApp = async () => {
   document.querySelectorAll('input[name="viewMode"]').forEach((radio) => {
     radio.addEventListener("change", (e) => {
       state.viewMode = e.target.value;
-      // Reset active marker when changing views
-      state.activeMarkerId = null;
-      state.currentTooltip = null;
+      clearMarkerState(); // Clear marker state when changing views
       updateGlobeData();
     });
   });
 
   const prevButton = document.querySelector("#prevLocation");
   const nextButton = document.querySelector("#nextLocation");
-  // Setup navigation
-  prevButton.addEventListener(
-    "click",
-    () => navigateToLocation(state.currentLocationIndex - 1),
-  );
+  // Setup navigation with direct index updates
+  prevButton.addEventListener("click", () => {
+    navigateToLocation(state.currentLocationIndex - 1);
+  });
 
-  nextButton.addEventListener(
-    "click",
-    () => navigateToLocation(state.currentLocationIndex + 1),
-  );
+  nextButton.addEventListener("click", () => {
+    navigateToLocation(state.currentLocationIndex + 1);
+  });
 
   // Handle window resize
   const handleResize = () => {
@@ -427,3 +485,70 @@ const initApp = async () => {
 
 // Start the application when DOM is ready
 document.addEventListener("DOMContentLoaded", initApp);
+
+// 1. Marker state manager (atom_14)
+const clearMarkerState = () => {
+  // Clear active marker states
+  const activeMarker = document.querySelector(".icon.selected");
+  if (activeMarker) {
+    activeMarker.classList.remove("selected");
+  }
+
+  // Clear active tooltip
+  if (state.currentTooltip) {
+    state.currentTooltip.style.display = "none";
+    state.currentTooltip = null;
+  }
+
+  state.activeMarkerId = null;
+};
+
+// 2. Marker activation manager (atom_15)
+const activateMarker = (markerId) => {
+  if (!markerId) return;
+
+  // Clear previous state first
+  clearMarkerState();
+
+  // Set new active marker
+  const container = document.querySelector(`#${markerId}`);
+  if (container) {
+    const icon = container.querySelector(".icon");
+    const tooltip = container.querySelector(".marker-tooltip");
+
+    if (icon && tooltip) {
+      icon.classList.add("selected");
+      tooltip.style.display = "block";
+      state.currentTooltip = tooltip;
+      state.activeMarkerId = markerId;
+    }
+  }
+};
+
+// 3. Location state manager (molecule_5)
+const setActiveLocation = (data, shouldAnimate = true) => {
+  if (!data || !state.globeInstance) return;
+
+  // Update camera position
+  state.globeInstance.pointOfView(
+    { lat: data.lat - 70, lng: data.lng, altitude: 2.5 },
+    shouldAnimate ? 1000 : 0,
+  );
+
+  // Generate arcs if office
+  state.arcData = [];
+  if (data.type === "office") {
+    const managedPortNames = data.managedPorts.split(", ");
+    const managedPorts = state.portData.filter((port) =>
+      managedPortNames.includes(port.name)
+    );
+    state.arcData = generateArcData(data, managedPorts);
+    state.globeInstance.arcsData(state.arcData);
+  }
+
+  // Update marker state
+  setTimeout(() => {
+    activateMarker(data.id);
+    updateGlobeData();
+  }, shouldAnimate ? 1100 : 0);
+};
