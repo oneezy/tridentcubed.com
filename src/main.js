@@ -5,7 +5,7 @@ import "./style.css";
 // Constants & Configuration
 // -----------------------------------------------------------------------------
 // 1. Utility function for responsive breakpoints (atom_1)
-function mediaQueryValue(defaultValue, sm, md, lg) {
+function mqValue(defaultValue, sm, md, lg) {
   const breakpoints = [
     { query: "(min-width: 1024px)", value: lg }, // lg (Desktop)
     { query: "(min-width: 768px)", value: md }, // md (Tablet)
@@ -23,10 +23,10 @@ function mediaQueryValue(defaultValue, sm, md, lg) {
 
 // 2. Basic configuration settings (atom_2)
 const CONFIG = {
-  SCALE_FACTOR: mediaQueryValue(2.5, 3, 4),
+  SCALE_FACTOR: mqValue(2.5, 3, 3.5),
+  POV_ALTITUDE: mqValue(4, 3, 2.5),
   POINT_ALTITUDE: 0.2,
-  POINT_COLOR: "blue",
-  POV_ALTITUDE: mediaQueryValue(4, 3, 2.25),
+  POINT_COLOR: "rgba(0, 0, 255, 0)",
   ANIMATION_DURATION: 1000,
 };
 
@@ -60,86 +60,22 @@ const state = {
 // DOM Utilities
 // -----------------------------------------------------------------------------
 // 5. Creates base HTML structure (atom_5)
-const setupBaseHTML = () => {
-  document.querySelector("#app").innerHTML = `
-<section class="hero-section">
+const setupControlsHTML = () => {
+  const controls = document.querySelector("#controls");
 
-	<!-- HERO SECTION
-	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
-	<div class="back">
-		<div class="hero-image">
-			<img src="https://www.tridentcubed.com/wp-content/uploads/houston-night-2-1.jpg" alt="" class="blur-image">
-			<img src="https://www.tridentcubed.com/wp-content/uploads/houston-night-2-1.jpg" alt="" class="main-image">
-			<div class="overlay overlay-scrim"></div>
-		</div>
-
-		<div class="hero-container">
-			<div class="hero-title">
-				<strong>Logistics Support Partner</strong>
-				<h1>Highly experienced Port Captains, Surveyors and Transport Engineers</h1>
-			</div>
-		</div>
-	</div>
-	
-	<!-- GLOBE
-	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
-	<div class="globe-container">
-		<div id="globe"></div>
-		<div class="btn-container btn-position none">
-			<a class="btn btn-primary" href="#">
-				<i class="icon icon-ship"></i>
-				<!-- <i class="icon icon-wheel"></i> -->
-				<!-- <i class="icon icon-boat"></i> -->
-				<!-- <i class="icon icon-captain"></i> -->
-				<!-- <i class="icon icon-earth"></i> -->
-				<!-- <i class="icon icon-globe"></i> -->
-				<!-- <i class="icon icon-map"></i> -->
-				<!-- <i class="icon icon-anchor"></i> -->
-				<!-- <i class="icon icon-container"></i> -->
-				<!-- <i class="icon icon-propeller"></i> -->
-				<!-- <i class="icon icon-trident"></i> -->
-				<!-- <i class="icon icon-trident2"></i> -->
-				Partner With Us
-			</a>
-		</div>
-		<div class="overlay overlay-gradient"></div> 
-	</div>
+  controls.innerHTML = `
 	
 	<!-- GLOBE CONTROLS
 	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
-	<div class="front">
-		<div id="frontContent" class="front-content none"></div>
-    <div class="front-container">
-		  <div class="indicators" id="frontIndicators"></div> 
-			<div class="btn-container">
-		    <button id="backBtn" class="btn btn-ghost">
-          <i class="icon icon-chevron-left"></i>
-        </button>
-				<a class="btn btn-primary" href="#">
-					<i class="icon icon-ship"></i>
-					<!-- <i class="icon icon-wheel"></i> -->
-					<!-- <i class="icon icon-boat"></i> -->
-					<!-- <i class="icon icon-captain"></i> -->
-					<!-- <i class="icon icon-earth"></i> -->
-					<!-- <i class="icon icon-globe"></i> -->
-					<!-- <i class="icon icon-map"></i> -->
-					<!-- <i class="icon icon-anchor"></i> -->
-					<!-- <i class="icon icon-container"></i> -->
-					<!-- <i class="icon icon-propeller"></i> -->
-					<!-- <i class="icon icon-trident"></i> -->
-					<!-- <i class="icon icon-trident2"></i> -->
-					Partner With Us
-				</a>
-        <button id="nextBtn" class="btn btn-ghost">
-          <i class="icon icon-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-	</div>
-</section>
-
-<section>2</section>
-<section>3</section>
+  <div class="btn-container">
+    <button id="backBtn" class="btn btn-ghost">
+      <i class="icon icon-chevron-left"></i>
+    </button>
+    <div class="indicators" id="indicators"></div> 
+    <button id="nextBtn" class="btn btn-ghost">
+      <i class="icon icon-chevron-right"></i>
+    </button>
+  </div>
   `;
 };
 
@@ -200,15 +136,24 @@ const updateContent = () => {
 
 // 8. Updates the content panel with location details (atom_6)
 const updateContentPanel = (location, ports) => {
-  const content = document.querySelector("#frontContent");
+  const content = document.querySelector("#content");
   if (!content) return;
 
   content.innerHTML = `
-    <div>
-      <strong>${location.location}</strong><br>
-      ${location.phone}<br>
-      ${location.email}
+    <div class="flex-col">
+      <h3>${location.location}</h3>
+      <div class="btn-container">
+        <a class="btn btn-text" href="tel:${location.phone}">
+          <i class="icon icon-phone"></i>
+          ${location.phone}
+        </a>
+        <a class="btn btn-text" href="mailto:${location.email}">
+          <i class="icon icon-email"></i>
+          ${location.email}
+        </a>
+      </div>
     </div>
+
     <ul>
       ${
     ports.length
@@ -228,7 +173,7 @@ const changeLocation = (newIndex) => {
 
 // 11. Sets up location indicators (atom_8)
 const setupIndicators = () => {
-  const indicatorContainer = document.querySelector("#frontIndicators");
+  const indicatorContainer = document.querySelector("#indicators");
   state.locations.forEach((_, idx) => {
     const indicatorEl = document.createElement("div");
     indicatorEl.className = "indicator";
@@ -248,8 +193,8 @@ const setupNavigation = () => {
 // 13. Handles window resize events (atom_10)
 const handleResize = () => {
   if (state.globeInstance) {
-    const scaleFactor = mediaQueryValue(2.5, 3, 4);
-    const altitude = mediaQueryValue(4, 3, 2.25);
+    const scaleFactor = mqValue(2.5, 3, 3.5);
+    const altitude = mqValue(4, 3, 2.5);
 
     state.globeInstance
       .width(window.innerWidth)
@@ -263,13 +208,13 @@ const handleResize = () => {
 // -----------------------------------------------------------------------------
 // 10. Initializes and configures the globe (organism_1)
 const setupGlobe = async () => {
-  await setupBaseHTML();
+  await setupControlsHTML();
   await fetchData();
 
   // Initialize globe
   const globeEl = document.querySelector("#globe");
-  const scaleFactor = mediaQueryValue(2.5, 3, 4);
-  const altitude = mediaQueryValue(4, 3, 2.25);
+  const scaleFactor = mqValue(2.5, 3, 3.5);
+  const altitude = mqValue(4, 3, 2.5);
 
   state.globeInstance = new Globe(globeEl)
     .globeImageUrl(ASSETS.earthSkin)
@@ -289,7 +234,7 @@ const setupGlobe = async () => {
     .htmlLat((d) => d.lat)
     .htmlLng((d) => d.lng)
     .htmlAltitude(0.1)
-    .atmosphereColor("blue")
+    .atmosphereColor("#00b7ff")
     .atmosphereAltitude(0.2)
     .pointOfView({ lat: 0, lng: 0, altitude })
     .onGlobeReady(() => {
@@ -309,4 +254,5 @@ window.addEventListener("resize", handleResize);
 document.addEventListener("DOMContentLoaded", () => {
   setupGlobe();
   handleResize();
+  setTimeout(updateContent, 2000);
 });

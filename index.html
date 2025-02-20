@@ -2,11 +2,77 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
     <title>Globe Visualization</title>
   </head>
   <body>
-    <div id="app"></div>
+    <section class="hero-section">
+      <!-- HERO SECTION
+      :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+      <div class="back">
+        <div class="hero-image">
+          <img
+            src="https://www.tridentcubed.com/wp-content/uploads/houston-night-2-1.jpg"
+            alt=""
+            class="blur-image"
+          >
+          <img
+            src="https://www.tridentcubed.com/wp-content/uploads/houston-night-2-1.jpg"
+            alt=""
+            class="main-image"
+          >
+          <div class="overlay overlay-scrim"></div>
+        </div>
+
+        <div class="hero-container">
+          <div class="hero-title">
+            <strong>Logistics Support Partner</strong>
+            <h1>
+              Highly experienced Port Captains, Surveyors and Transport
+              Engineers
+            </h1>
+          </div>
+          <div class="btn-container">
+            <a class="btn btn-primary" href="#">
+              <i class="icon icon-ship"></i>
+              <!-- <i class="icon icon-wheel"></i> -->
+              <!-- <i class="icon icon-boat"></i> -->
+              <!-- <i class="icon icon-captain"></i> -->
+              <!-- <i class="icon icon-earth"></i> -->
+              <!-- <i class="icon icon-globe"></i> -->
+              <!-- <i class="icon icon-map"></i> -->
+              <!-- <i class="icon icon-anchor"></i> -->
+              <!-- <i class="icon icon-container"></i> -->
+              <!-- <i class="icon icon-propeller"></i> -->
+              <!-- <i class="icon icon-trident"></i> -->
+              <!-- <i class="icon icon-trident2"></i> -->
+              Partner With Us
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- GLOBE
+      :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+      <div class="globe-container">
+        <div class="overlay overlay-atmosphere"></div>
+        <div id="globe"></div>
+        <div class="front">
+          <div class="front-container">
+            <div id="content"></div>
+            <div id="controls"></div>
+          </div>
+        </div>
+        <div class="overlay overlay-gradient"></div>
+      </div>
+    </section>
+
+    <section>2</section>
+    <section>3</section>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

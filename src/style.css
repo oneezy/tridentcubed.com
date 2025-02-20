@@ -70,11 +70,13 @@ body {
 }
 
 .overlay-gradient {
-	background: linear-gradient(transparent 85%, #000 100%);
+	background: linear-gradient(transparent 75%, #000 100%);
+	/* z-index: 3; */
 }
 
 .overlay-atmosphere {
-	background: linear-gradient(transparent 50%, blue 100%);
+	background: linear-gradient(transparent 65%, #00b7ff 100%);
+	opacity: 1;
 }
 
 /* Hero Container */
@@ -83,8 +85,8 @@ body {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 20px;
-	padding-top: 20px;
+	gap: 3rem;
+	padding-top: 3rem;
 }
 
 /* Hero Title */
@@ -99,7 +101,7 @@ body {
 }
 
 .hero-title h1 {
-	font-size: 5vw;
+	font-size: 4.5vw;
 	font-weight: 900;
 }
 
@@ -123,6 +125,19 @@ body {
 	}
 }
 
+.flex {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.flex-col {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
 /* Buttons
  **********************************************************************/
 button {
@@ -133,7 +148,7 @@ button {
 	bottom: 3rem;
 }
 .btn-container {
-	width: 100%;
+	width: min-content;
 	display: flex;
 	gap: 1rem;
 	align-items: center;
@@ -157,6 +172,14 @@ button {
 	overflow: hidden;
 	text-transform: uppercase;
 	cursor: pointer;
+}
+
+.btn-text {
+	padding: unset;
+	/* max-width: unset; */
+	font-weight: 400;
+	overflow: unset;
+	text-transform: none;
 }
 
 .btn-primary {
@@ -184,6 +207,12 @@ button {
 	mask-size: contain;
 }
 
+.icon-phone {
+	mask-image: url("https://api.iconify.design/material-symbols:call-outline-rounded.svg?color=%23000000");
+}
+.icon-email {
+	mask-image: url("https://api.iconify.design/material-symbols:mail-outline-rounded.svg?color=%23000000");
+}
 .icon-wheel {
 	mask-image: url("https://api.iconify.design/mdi:ship-wheel.svg?color=%23000000");
 }
@@ -233,7 +262,6 @@ button {
 /* Globe CSS
  **********************************************************************/
 .globe-container {
-	position: relative;
 	height: 100vh;
 	width: 100vw;
 	overflow: hidden;
@@ -246,6 +274,7 @@ button {
 	width: 100%;
 	height: 100%;
 	inset: 0;
+	z-index: 0;
 }
 
 section {
@@ -257,10 +286,6 @@ section {
 }
 
 .back {
-	/* 	
-		pointer-events: none;
-		position: absolute;
-		inset: 0; */
 	padding: 0 0 50vh;
 	display: flex;
 	flex-direction: column;
@@ -270,57 +295,79 @@ section {
 }
 
 .front {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 10px;
-}
-
-.front-container {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
 	z-index: 1;
+}
+.front-container {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 1rem;
 }
 
-.front-content {
-	min-width: 300px;
+#content {
+	color: white;
+	width: max-content;
+	position: absolute;
+	bottom: 100%;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	border: 1px solid #ccc;
-	background: rgba(255, 255, 255, 0.4);
-	padding: 10px;
 	text-align: center;
-	border-radius: 10px;
-	position: fixed;
-	top: 3rem;
 }
 
-.front-content ul {
+#content h3 {
+	font-size: 2rem;
+	font-weight: 300;
+	padding: 0.5rem;
+}
+
+#content .btn {
+	gap: 0.5rem;
+	font-weight: 400;
+	color: rgba(255, 255, 255, 0.5);
+}
+
+#content .btn .icon {
+	color: white;
+	width: 1rem;
+	height: 1rem;
+}
+
+#content ul {
 	text-align: left;
+	display: none;
 }
 
-.indicators {
+#controls {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	gap: 1rem;
+	padding: 1rem 0;
+}
+
+#controls .indicators {
 	z-index: 1;
 	display: flex;
 	gap: 5px;
 }
 
-.indicator {
-	width: 10px;
-	height: 10px;
+#controls .indicator {
+	width: 0.75rem;
+	height: 0.75rem;
 	border-radius: 50%;
 	background-color: white;
-	opacity: 0.4;
+	opacity: 0.15;
 	cursor: pointer;
 }
 
-.indicator.active {
+#controls .indicator.active {
 	opacity: 1;
 	background-color: blue;
 }
@@ -362,14 +409,18 @@ section {
 
 /* Office icon styles */
 .svg-location {
-	width: 14px;
-	height: 14px;
+	position: relative;
+	z-index: 1;
 	background-image: url("/images/icons/mapmarker.svg");
+	opacity: 0;
+	/* transition: opacity 1s 0.22s ease-in-out; */
 }
 
 .svg-location:hover,
 .svg-location.active {
 	background-image: url("/images/icons/mapmarker.svg");
-	scale: 10;
-	transform-origin: bottom center;
+	scale: 5;
+	transform-origin: top center;
+	z-index: 2;
+	opacity: 1;
 }
