@@ -27,6 +27,7 @@ body {
 .hero-section {
 	position: relative;
 	height: 100vh;
+	height: 100svh;
 	overflow: hidden;
 }
 
@@ -263,6 +264,7 @@ button {
  **********************************************************************/
 .globe-container {
 	height: 100vh;
+	height: 100svh;
 	width: 100vw;
 	overflow: hidden;
 	position: absolute;
@@ -279,6 +281,7 @@ button {
 
 section {
 	min-height: 100vh;
+	min-height: 100svh;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -287,6 +290,7 @@ section {
 
 .back {
 	padding: 0 0 50vh;
+	padding: 0 0 50svh;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -321,6 +325,7 @@ section {
 }
 
 #content h3 {
+	user-select: none;
 	font-size: 2rem;
 	font-weight: 300;
 	padding: 0.5rem;
@@ -408,19 +413,31 @@ section {
 }
 
 /* Office icon styles */
-.svg-location {
+.svg-marker {
 	position: relative;
 	z-index: 1;
 	background-image: url("/images/icons/mapmarker.svg");
 	opacity: 0;
+	/* transform-origin: bottom center; */
 	/* transition: opacity 1s 0.22s ease-in-out; */
 }
 
-.svg-location:hover,
-.svg-location.active {
+/* Office icon styles */
+.svg-marker:hover,
+.svg-marker.active {
 	background-image: url("/images/icons/mapmarker.svg");
 	scale: 5;
-	transform-origin: top center;
 	z-index: 2;
 	opacity: 1;
+}
+
+@media (max-width: 600px) {
+	.svg-marker {
+		transform-origin: bottom center;
+	}
+
+	.svg-marker:hover,
+	.svg-marker.active {
+		scale: 3;
+	}
 }

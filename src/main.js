@@ -116,7 +116,7 @@ const updateContent = () => {
   );
 
   // Update HTML markers
-  document.querySelectorAll(".globe-container .svg-location").forEach(
+  document.querySelectorAll(".globe-container .svg-marker").forEach(
     (marker, idx) => {
       marker.classList.toggle("active", idx === currentIndex);
     },
@@ -228,7 +228,7 @@ const setupGlobe = async () => {
     .htmlElementsData(state.locations)
     .htmlElement((d) => {
       const el = document.createElement("div");
-      el.innerHTML = `<i class="svg svg-location"></i>`;
+      el.innerHTML = `<i class="svg svg-marker"></i>`;
       return el;
     })
     .htmlLat((d) => d.lat)
