@@ -23,6 +23,18 @@ body {
 	overflow-x: hidden;
 }
 
+header {
+	display: none;
+	background: #012c6d;
+	height: 138px;
+}
+
+@media (max-width: 600px) {
+	header {
+		height: 145px;
+	}
+}
+
 /* Hero Section */
 .hero-section {
 	position: relative;
@@ -76,18 +88,26 @@ body {
 }
 
 .overlay-atmosphere {
-	background: linear-gradient(transparent 65%, #00b7ff 100%);
+	background: linear-gradient(transparent 60%, #00b7ff 100%);
 	opacity: 1;
 }
 
 /* Hero Container */
 .hero-container {
+	color: white;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 3rem;
+	gap: 1.5rem;
 	padding-top: 3rem;
+	/* background: rgba(0, 255, 0, 0.25); */
+}
+
+@media (max-width: 600px) {
+	.hero-container {
+		gap: 1rem;
+	}
 }
 
 /* Hero Title */
@@ -98,19 +118,21 @@ body {
 	gap: 0.5rem;
 	text-align: center;
 	color: white;
-	padding: 0 10%;
+	padding: 0 15%;
+	/* background: rgba(255, 0, 0, 0.25); */
 }
 
 .hero-title h1 {
-	font-size: 4.5vw;
+	font-size: 4.2vw;
 	font-weight: 900;
+	/* background: rgba(0, 0, 255, 0.25); */
 }
 
 .hero-title strong {
 	font-size: 0.85rem;
 	font-weight: normal;
 	text-transform: uppercase;
-	letter-spacing: 3px;
+	letter-spacing: 2.5px;
 	opacity: 0.7;
 }
 
@@ -119,13 +141,42 @@ body {
 		padding: 0 1rem;
 	}
 	.hero-title h1 {
-		font-size: 2rem;
+		font-size: 1.5rem;
 	}
 	.hero-title strong {
-		font-size: 0.85rem;
+		font-size: 0.7rem;
 	}
 }
 
+.stat-container {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	gap: 2rem;
+}
+
+.stat-container section {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-around;
+	min-width: 80px;
+}
+
+.stat-container .stat-counter {
+	font-family: "Roboto Mono", monospace;
+	font-size: 1.5rem;
+	font-weight: 800;
+}
+
+.stat-container .stat-label {
+	font-size: 0.5rem;
+	opacity: 0.6;
+	text-transform: uppercase;
+}
+
+/* Buttons
+ **********************************************************************/
 .flex {
 	display: flex;
 	align-items: center;
@@ -139,8 +190,6 @@ body {
 	justify-content: center;
 }
 
-/* Buttons
- **********************************************************************/
 button {
 	border: none;
 }
@@ -279,15 +328,6 @@ button {
 	z-index: 0;
 }
 
-section {
-	min-height: 100vh;
-	min-height: 100svh;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-}
-
 .back {
 	padding: 0 0 50vh;
 	padding: 0 0 50svh;
@@ -310,18 +350,59 @@ section {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+	padding: 2rem 0;
 }
 
 #content {
 	color: white;
 	width: max-content;
-	position: absolute;
+	/* position: absolute; */
 	bottom: 100%;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
 	text-align: center;
+	/* padding: 2rem 0; */
+}
+
+#controls .btn-container {
+	width: 100vw;
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 2rem;
+}
+#controls .btn-controls {
+	position: absolute;
+	scale: 3;
+}
+#controls #backBtn {
+	bottom: 0;
+	left: 30%;
+}
+#controls #nextBtn {
+	bottom: 0;
+	right: 30%;
+}
+
+@media (max-width: 600px) {
+	#controls .btn-container {
+		width: 100vw;
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 3rem;
+	}
+	#controls .btn-controls {
+		scale: 1;
+	}
+	#controls #backBtn {
+		left: -4rem;
+	}
+	#controls #nextBtn {
+		right: -4rem;
+	}
 }
 
 #content h3 {
@@ -353,26 +434,26 @@ section {
 	flex-direction: row;
 	justify-content: center;
 	align-items: center;
-	gap: 1rem;
-	padding: 1rem 0;
+	/* gap: 1rem; */
+	/* padding: 1rem 0; */
 }
 
-#controls .indicators {
+#indicators {
 	z-index: 1;
 	display: flex;
 	gap: 5px;
 }
 
-#controls .indicator {
-	width: 0.75rem;
-	height: 0.75rem;
+#indicators .indicator {
+	width: 0.5rem;
+	height: 0.5rem;
 	border-radius: 50%;
 	background-color: white;
 	opacity: 0.15;
 	cursor: pointer;
 }
 
-#controls .indicator.active {
+#indicators .indicator.active {
 	opacity: 1;
 	background-color: blue;
 }
@@ -389,14 +470,14 @@ section {
 }
 
 /* Office icon styles */
-.mask-location {
+.mask-marker {
 	width: 14px;
 	height: 14px;
 	mask-image: url("https://api.iconify.design/mage:map-marker-fill.svg");
 }
 
-.mask-location:hover,
-.mask-location.active {
+.mask-marker:hover,
+.mask-marker.active {
 	mask-image: url("https://api.iconify.design/mage:map-marker-fill.svg");
 	scale: 10;
 	transform-origin: bottom center;
@@ -418,7 +499,7 @@ section {
 	z-index: 1;
 	background-image: url("/images/icons/mapmarker.svg");
 	opacity: 0;
-	/* transform-origin: bottom center; */
+	transform-origin: top center;
 	/* transition: opacity 1s 0.22s ease-in-out; */
 }
 
@@ -426,7 +507,8 @@ section {
 .svg-marker:hover,
 .svg-marker.active {
 	background-image: url("/images/icons/mapmarker.svg");
-	scale: 5;
+	translate: 0 150px;
+	scale: 3;
 	z-index: 2;
 	opacity: 1;
 }
@@ -438,6 +520,7 @@ section {
 
 	.svg-marker:hover,
 	.svg-marker.active {
+		translate: 0 60px;
 		scale: 3;
 	}
 }

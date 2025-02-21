@@ -10,6 +10,7 @@
   </head>
   <body>
     <section class="hero-section">
+      <header class="header"></header>
       <!-- HERO SECTION
       :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
       <div class="back">
@@ -34,6 +35,22 @@
               Highly experienced Port Captains, Surveyors and Transport
               Engineers
             </h1>
+          </div>
+          <div id="stats" class="stat-container">
+            <section>
+              <span class="stat-counter" data-target="100">0</span>
+              <span class="stat-label">Years Experience</span>
+            </section>
+            <section>
+              <span id="locations-counter" class="stat-counter" data-target="0"
+              >0</span>
+              <span class="stat-label">Locations</span>
+            </section>
+            <section>
+              <span id="ports-counter" class="stat-counter" data-target="0"
+              >0</span>
+              <span class="stat-label">Ports</span>
+            </section>
           </div>
           <div class="btn-container">
             <a class="btn btn-primary" href="#">
@@ -62,8 +79,9 @@
         <div id="globe"></div>
         <div class="front">
           <div class="front-container">
-            <div id="content"></div>
             <div id="controls"></div>
+            <div class="indicators" id="indicators"></div>
+            <div id="content"></div>
           </div>
         </div>
         <div class="overlay overlay-gradient"></div>
