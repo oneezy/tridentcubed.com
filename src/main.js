@@ -260,7 +260,7 @@ const CONFIG = {
 
   GLOBE_TOP: mqValue(window.innerHeight * 0.8, window.innerHeight * 1.42),
   GLOBE_LEFT: mqValue(0, 0),
-  POV_ALTITUDE: mqValue(0.8, 0.3),
+  POV_ALTITUDE: mqValue(0.8, 0.32),
   POV_LATITUDE: mqValue(38, 29),
 
   // POINTS
