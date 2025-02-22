@@ -109,11 +109,11 @@ const updateContentPanel = (location, ports) => {
 
     <div class="flex gap-4 items-center justify-center">
       <a class="btn btn-text" href="tel:${location.phone}">
-        <i class="icon icon-email"></i>
+        <i class="icon icon-phone"></i>
         ${location.phone}
       </a>
       <a class="btn btn-text" href="mailto:${location.email}">
-        <i class="icon icon-phone"></i>
+        <i class="icon icon-email"></i>
         ${location.email}
       </a>
     </div>
