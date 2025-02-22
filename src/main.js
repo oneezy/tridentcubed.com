@@ -34,28 +34,6 @@ const state = {
 };
 
 // -----------------------------------------------------------------------------
-// DOM Utilities
-// -----------------------------------------------------------------------------
-// 5. Creates base HTML structure (atom_5)
-const setupControlsHTML = () => {
-  const controls = document.querySelector("#controls");
-
-  controls.innerHTML = `
-	
-	<!-- GLOBE CONTROLS
-	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
-  <div class="btn-container">
-    <button id="backBtn" class="btn btn-ghost btn-controls">
-      <i class="icon icon-chevron-left"></i>
-    </button>
-    <button id="nextBtn" class="btn btn-ghost btn-controls">
-      <i class="icon icon-chevron-right"></i>
-    </button>
-  </div>
-  `;
-};
-
-// -----------------------------------------------------------------------------
 // Data Management
 // -----------------------------------------------------------------------------
 // 6. Fetches and stores location and port data (molecule_1)
@@ -125,22 +103,28 @@ const updateContentPanel = (location, ports) => {
   if (!content) return;
 
   content.innerHTML = `
+    <div class="flex w-screen relative md:w-[550px]">
+      <button id="backBtn" class="btn-controls">
+        <i class="icon icon-chevron-left"></i>
+      </button>
+      <h3 class="select-none text-2xl md:text-4xl font-light p-2 flex-grow">${location.location}</h3>
+      <button id="nextBtn" class="btn-controls right-0 justify-end">
+        <i class="icon icon-chevron-right"></i>
+      </button>
+    </div>
 
-      <div class="flex-col">
-        <h3>${location.location}</h3>
-        <div class="btn-container">
-          <a class="btn btn-text" href="tel:${location.phone}">
-            <i class="icon icon-phone"></i>
-            ${location.phone}
-          </a>
-          <a class="btn btn-text" href="mailto:${location.email}">
-            <i class="icon icon-email"></i>
-            ${location.email}
-          </a>
-        </div>
-      </div>
+    <div class="flex gap-4 items-center justify-center">
+      <a class="btn btn-text" href="tel:${location.phone}">
+        <i class="icon icon-email"></i>
+        ${location.phone}
+      </a>
+      <a class="btn btn-text" href="mailto:${location.email}">
+        <i class="icon icon-phone"></i>
+        ${location.email}
+      </a>
+    </div>
 
-    <ul>
+    <ul class="hidden">
       ${
     ports.length
       ? ports.map((p) => `<li>${p.port}</li>`).join("")
@@ -148,6 +132,9 @@ const updateContentPanel = (location, ports) => {
   }
     </ul>
   `;
+
+  // Set up navigation after content is updated
+  setupNavigation();
 };
 
 // Change location and update UI
@@ -169,7 +156,7 @@ const setupIndicators = () => {
   const indicatorContainer = document.querySelector("#indicators");
   state.locations.forEach((_, idx) => {
     const indicatorEl = document.createElement("div");
-    indicatorEl.className = "indicator";
+    indicatorEl.classList = "indicator ";
     indicatorEl.addEventListener("click", () => changeLocation(idx));
     indicatorContainer.appendChild(indicatorEl);
   });
@@ -177,10 +164,22 @@ const setupIndicators = () => {
 
 // 12. Sets up navigation controls (atom_9)
 const setupNavigation = () => {
-  document.querySelector("#backBtn")
-    .addEventListener("click", () => changeLocation(state.currentIndex - 1));
-  document.querySelector("#nextBtn")
-    .addEventListener("click", () => changeLocation(state.currentIndex + 1));
+  const backBtn = document.querySelector("#backBtn");
+  const nextBtn = document.querySelector("#nextBtn");
+
+  if (backBtn) {
+    backBtn.addEventListener(
+      "click",
+      () => changeLocation(state.currentIndex - 1),
+    );
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener(
+      "click",
+      () => changeLocation(state.currentIndex + 1),
+    );
+  }
 };
 
 // 13. Handles window resize events (atom_10)
@@ -273,8 +272,8 @@ const CONFIG = {
     "https://unpkg.com/three-globe@2.41.12/example/img/earth-blue-marble.jpg",
 
   // NO HEADER
-  SCALE_FACTOR: mqValue(4.5, 5.5),
-  POV_ALTITUDE: mqValue(2, 1.9),
+  SCALE_FACTOR: mqValue(3, 5.5),
+  POV_ALTITUDE: mqValue(2.5, 1.9),
   POV_LATITUDE: mqValue(47, 54),
 
   // WITH HEADER
@@ -287,7 +286,7 @@ const CONFIG = {
   POINT_COLOR: "rgba(0, 0, 255, 1)",
 
   // LABELS
-  LABEL_SIZE: mqValue(0.6, 0.5),
+  LABEL_SIZE: mqValue(0.8, 0.4),
   LABEL_DOT_RADIUS: mqValue(0.3, 0.2),
   LABEL_TEXT_COLOR: "rgba(255, 255, 255, 1)",
   LABEL_DOT_COLOR: "lime",
@@ -309,7 +308,6 @@ const CONFIG = {
 // -----------------------------------------------------------------------------
 // Initializes and configures the globe (organism_1)
 const setupGlobe = async () => {
-  await setupControlsHTML();
   await fetchData();
 
   // Initialize globe
@@ -325,8 +323,10 @@ const setupGlobe = async () => {
     .height(window.innerHeight * scaleFactor)
     .pointOfView({ lat: 0, lng: 0, altitude })
     // ATMOSPHERE
-    .atmosphereColor("#00b7ff")
-    .atmosphereAltitude(0)
+    .showAtmosphere(true)
+    .atmosphereColor("#00bcff")
+    .atmosphereAltitude(mqValue(0.2, 0.1))
+    .globeOffset(100, 100)
     // RINGS
     .ringsData(state.locations)
     .ringLat((d) => d.lat)
@@ -349,18 +349,13 @@ const setupGlobe = async () => {
     })
     .htmlLat((d) => d.lat)
     .htmlLng((d) => d.lng)
-    .htmlAltitude(0.1)
+    .htmlAltitude(0.02)
     // LABELS
-    // .labelAltitude((d) => d.altitude || CONFIG.LABEL_ALTITUDE)
     .labelColor(() => CONFIG.LABEL_TEXT_COLOR)
-    // .labelDotOrientation(() => CONFIG.LABEL_POSITION)
     .labelDotOrientation((d) => d.orientation || "bottom")
     .labelDotRadius(() => CONFIG.LABEL_DOT_RADIUS)
-    // .labelsData([])
-    // .labelsData(state.por)
     .labelSize(() => CONFIG.LABEL_SIZE)
     .labelText("label")
-    // .labelText((d) => d.label)
     .labelLabel((d) => `
         <div><b>hi mom</b></div>
         <div>hope it works</div>
@@ -374,7 +369,6 @@ const setupGlobe = async () => {
 
   state.globeInstance.controls().enableZoom = false;
   setupIndicators();
-  setupNavigation();
   updateContent();
   updateLabels();
 };
