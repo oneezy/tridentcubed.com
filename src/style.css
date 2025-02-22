@@ -88,19 +88,16 @@
 /* ---------------------------------------- */
 /* 6) EXTRA ICONS / MAP MARKERS            */
 /* ---------------------------------------- */
-
 /* Additional .svg usage */
 .svg {
-	@apply block w-10 h-10 bg-center bg-no-repeat bg-contain;
+	@apply block w-6 h-6 bg-center bg-no-repeat bg-contain cursor-pointer;
 }
 .svg-marker {
-	@apply relative z-1 ;
+	@apply origin-bottom -translate-y-3 md:-translate-y-1 relative z-1;
 	background-image: url('/images/icons/mapmarker.svg');
-	transform-origin: top center;
 }
-.svg-marker:hover,
 .svg-marker.active {
-	@apply translate-y-[150px] scale-[3] z-2 opacity-100;
+	@apply inline-block scale-[3] md:scale-[4] -translate-y-5;
 }
 
 .icon {

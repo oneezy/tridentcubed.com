@@ -49,9 +49,6 @@ const fetchData = async () => {
 
     // Update stats after data is loaded
     updateStats();
-
-    console.log("Fetched Locations:", state.locations);
-    console.log("Fetched Ports:", state.ports);
   } catch (error) {
     console.error("Error fetching data:", error);
   }
@@ -63,6 +60,12 @@ const fetchData = async () => {
 // 7. Updates UI content based on current location (molecule_2)
 const updateContent = () => {
   const { locations, ports, currentIndex, globeInstance } = state;
+
+  if (!globeInstance || !locations.length) {
+    console.warn("Globe not ready or no locations available");
+    return;
+  }
+
   const currentLocation = locations[currentIndex];
 
   // Update rings data to only show for current location
@@ -78,17 +81,8 @@ const updateContent = () => {
     CONFIG.ANIMATION_DURATION,
   );
 
-  // Update HTML markers
-  document.querySelectorAll(".globe-container .svg-marker").forEach(
-    (marker, idx) => {
-      marker.classList.toggle("active", idx === currentIndex);
-    },
-  );
-
-  // Update side indicators
-  document.querySelectorAll(".indicator").forEach((indicator, idx) => {
-    indicator.classList.toggle("active", idx === currentIndex);
-  });
+  // Update all active states
+  updateActiveStates();
 
   // Update content panel
   const filteredPorts = ports.filter((port) =>
@@ -142,11 +136,6 @@ const changeLocation = (newIndex) => {
   const total = state.locations.length;
   state.currentIndex = (newIndex + total) % total;
 
-  console.log(
-    "Switched to Location:",
-    state.locations[state.currentIndex].location,
-  ); // Debugging log
-
   updateContent();
   updateLabels();
 };
@@ -183,14 +172,14 @@ const setupNavigation = () => {
 };
 
 // 13. Handles window resize events (atom_10)
-const handleResize = () => {
+const handleResize = (e) => {
   if (state.globeInstance) {
-    const scaleFactor = CONFIG.SCALE_FACTOR;
     const altitude = CONFIG.POV_ALTITUDE;
-
+    // Update globe position with vertical offset
     state.globeInstance
-      .width(window.innerWidth)
-      .height(window.innerHeight * scaleFactor)
+      .width([e.target.innerWidth])
+      .height([e.target.innerHeight])
+      .globeOffset([CONFIG.GLOBE_LEFT, CONFIG.GLOBE_TOP])
       .pointOfView({ lat: 0, lng: 0, altitude }, 1000);
   }
 };
@@ -222,8 +211,6 @@ const updateLabels = () => {
     state.globeInstance.labelsData([]); // Clear labels if no ports
     return;
   }
-
-  console.log("Active Ports:", activePorts);
 
   // Avoid label collisions by adjusting orientation
   const adjustedPorts = avoidLabelCollisions(
@@ -271,15 +258,10 @@ const CONFIG = {
   IMG_EARTH:
     "https://unpkg.com/three-globe@2.41.12/example/img/earth-blue-marble.jpg",
 
-  // NO HEADER
-  SCALE_FACTOR: mqValue(3, 5.5),
-  POV_ALTITUDE: mqValue(2.5, 1.9),
-  POV_LATITUDE: mqValue(47, 54),
-
-  // WITH HEADER
-  // SCALE_FACTOR: mqValue(4.5, 6.5),
-  // POV_ALTITUDE: mqValue(2.3, 1.9),
-  // POV_LATITUDE: mqValue(52, 55),
+  GLOBE_TOP: mqValue(window.innerHeight * 0.8, window.innerHeight * 1.42),
+  GLOBE_LEFT: mqValue(0, 0),
+  POV_ALTITUDE: mqValue(0.8, 0.3),
+  POV_LATITUDE: mqValue(38, 29),
 
   // POINTS
   POINT_ALTITUDE: 0.002,
@@ -312,21 +294,20 @@ const setupGlobe = async () => {
 
   // Initialize globe
   const globeEl = document.querySelector("#globe");
-  const scaleFactor = CONFIG.SCALE_FACTOR;
   const altitude = CONFIG.POV_ALTITUDE;
 
   state.globeInstance = new Globe(globeEl)
     // GLOBE
     .globeImageUrl(CONFIG.IMG_EARTH)
     .backgroundColor("rgba(0,0,0,0)")
-    .width(window.innerWidth)
-    .height(window.innerHeight * scaleFactor)
+    // .width(window.innerWidth * 2)
+    // .height(window.innerHeight * 2)
+    .globeOffset([0, CONFIG.GLOBE_TOP])
     .pointOfView({ lat: 0, lng: 0, altitude })
     // ATMOSPHERE
     .showAtmosphere(true)
     .atmosphereColor("#00bcff")
     .atmosphereAltitude(mqValue(0.2, 0.1))
-    .globeOffset(100, 100)
     // RINGS
     .ringsData(state.locations)
     .ringLat((d) => d.lat)
@@ -345,11 +326,24 @@ const setupGlobe = async () => {
     .htmlElement((d) => {
       const el = document.createElement("div");
       el.innerHTML = `<i class="svg svg-marker"></i>`;
+      el.dataset.lat = d.lat;
+      el.dataset.lng = d.lng;
+
+      el.style["pointer-events"] = "auto";
+      el.onclick = () => {
+        const idx = state.locations.findIndex((loc) =>
+          parseFloat(loc.lat) === parseFloat(d.lat) &&
+          parseFloat(loc.lng) === parseFloat(d.lng)
+        );
+        if (idx >= 0) {
+          changeLocation(idx);
+        }
+      };
       return el;
     })
     .htmlLat((d) => d.lat)
     .htmlLng((d) => d.lng)
-    .htmlAltitude(0.02)
+    .htmlAltitude(0.01)
     // LABELS
     .labelColor(() => CONFIG.LABEL_TEXT_COLOR)
     .labelDotOrientation((d) => d.orientation || "bottom")
@@ -357,20 +351,20 @@ const setupGlobe = async () => {
     .labelSize(() => CONFIG.LABEL_SIZE)
     .labelText("label")
     .labelLabel((d) => `
-        <div><b>hi mom</b></div>
-        <div>hope it works</div>
+        <div></div>
       `)
     // FIRST LOAD
     .onGlobeReady(() => {
       setTimeout(() => {
         updateContent();
+        // Add explicit marker update on globe ready
       }, 1000);
     });
-
   state.globeInstance.controls().enableZoom = false;
   setupIndicators();
   updateContent();
   updateLabels();
+  updateMarkers();
 };
 
 // -----------------------------------------------------------------------------
@@ -396,4 +390,43 @@ const updateStats = () => {
   if (portsCounter && state.ports) {
     portsCounter.setAttribute("data-target", state.ports.length);
   }
+};
+
+// 15. Updates marker states based on current location (atom_13)
+const updateMarkers = () => {
+  // Wait a brief moment for Globe.gl to render the HTML elements
+  setTimeout(() => {
+    const markers = document.querySelectorAll(".svg-marker");
+    markers.forEach((marker, idx) => {
+      marker.classList.toggle("active", idx === state.currentIndex);
+    });
+  }, 200);
+};
+
+// 16. Single source of truth for managing active states (molecule_4)
+const updateActiveStates = () => {
+  const { locations, currentIndex } = state;
+  if (!locations.length) return;
+
+  const currentLocation = locations[currentIndex];
+
+  // Helper to match elements with current location
+  const isCurrentLocation = (lat, lng) =>
+    parseFloat(lat) === parseFloat(currentLocation.lat) &&
+    parseFloat(lng) === parseFloat(currentLocation.lng);
+
+  // Update markers
+  document.querySelectorAll(".svg-marker").forEach((marker) => {
+    const parent = marker.closest("[data-lat][data-lng]");
+    if (parent) {
+      const lat = parent.dataset.lat;
+      const lng = parent.dataset.lng;
+      marker.classList.toggle("active", isCurrentLocation(lat, lng));
+    }
+  });
+
+  // Update indicators
+  document.querySelectorAll(".indicator").forEach((indicator, idx) => {
+    indicator.classList.toggle("active", idx === currentIndex);
+  });
 };
