@@ -11,6 +11,21 @@
 	--text-xxs: 0.7rem;
 }
 
+.none {
+	display: none !important;
+}
+
+@layer base {
+	input::-webkit-outer-spin-button,	
+	input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0; 
+	}
+
+input[type=number] {
+    -moz-appearance:textfield; /* Firefox */
+}
+}
 .bg-image {
 	@apply object-cover absolute inset-0 -z-1 w-full h-full;
 }
@@ -52,6 +67,21 @@
 	@apply text-xxs uppercase opacity-60 tracking-widest;
 }
 
+/* Controls */
+#controls {
+	@apply flex flex-col items-center justify-between gap-2;
+}
+#controls label {
+	@apply flex items-center justify-between gap-4;
+}
+#controls span {
+	@apply w-12;
+}
+
+#controls input[type="number"] {
+	@apply bg-gray-800 px-1 py-1 text-xs w-8 border-1 border-gray-600/70 text-right rounded;
+}
+
 /* ---------------------------------------- */
 /* 4) BUTTONS & COMMON UI ELEMENTS         */
 /* ---------------------------------------- */
@@ -70,7 +100,7 @@
 .btn-ghost {
 	@apply bg-transparent;
 }
-.btn-controls {
+.btn-navigation {
 	@apply flex-none absolute w-1/2 h-full flex items-center px-6 py-4 cursor-pointer;
 }
 

@@ -98,11 +98,11 @@ const updateContentPanel = (location, ports) => {
 
   content.innerHTML = `
     <div class="flex w-screen relative md:w-[550px]">
-      <button id="backBtn" class="btn-controls">
+      <button id="backBtn" class="btn-navigation">
         <i class="icon icon-chevron-left"></i>
       </button>
       <h3 class="select-none text-2xl md:text-4xl font-light p-2 flex-grow">${location.location}</h3>
-      <button id="nextBtn" class="btn-controls right-0 justify-end">
+      <button id="nextBtn" class="btn-navigation right-0 justify-end">
         <i class="icon icon-chevron-right"></i>
       </button>
     </div>
@@ -151,7 +151,7 @@ const setupIndicators = () => {
   });
 };
 
-// 12. Sets up navigation controls (atom_9)
+// 12. Sets up navigation navigation (atom_9)
 const setupNavigation = () => {
   const backBtn = document.querySelector("#backBtn");
   const nextBtn = document.querySelector("#nextBtn");
@@ -245,6 +245,9 @@ const avoidLabelCollisions = (labels) => {
   });
 };
 
+let w = window.innerWidth;
+let h = window.innerHeight;
+
 // 2. Basic configuration settings (atom_2)
 // Google Sheet: https://docs.google.com/spreadsheets/d/1_BNtsJr9TaSYRPFAKcAd9pa_TUQyYBfqEZiDvDvkPTw/
 const CONFIG = {
@@ -258,17 +261,20 @@ const CONFIG = {
   IMG_EARTH:
     "https://unpkg.com/three-globe@2.41.12/example/img/earth-blue-marble.jpg",
 
-  GLOBE_TOP: mqValue(window.innerHeight * 0.8, window.innerHeight * 1.42),
+  GLOBE_WIDTH: mqValue(w, w),
+  GLOBE_HEIGHT: mqValue(h, h),
   GLOBE_LEFT: mqValue(0, 0),
-  POV_ALTITUDE: mqValue(0.8, 0.32),
-  POV_LATITUDE: mqValue(38, 29),
+  // Position
+  POV_ALTITUDE: mqValue(0.8, 0.2),
+  GLOBE_TOP: mqValue(h * 0.8, h * 1.7),
+  POV_LATITUDE: mqValue(38, 21),
 
   // POINTS
   POINT_ALTITUDE: 0.002,
   POINT_COLOR: "rgba(0, 0, 255, 1)",
 
   // LABELS
-  LABEL_SIZE: mqValue(0.8, 0.4),
+  LABEL_SIZE: mqValue(0.8, 0.3),
   LABEL_DOT_RADIUS: mqValue(0.3, 0.2),
   LABEL_TEXT_COLOR: "rgba(255, 255, 255, 1)",
   LABEL_DOT_COLOR: "lime",
@@ -300,9 +306,9 @@ const setupGlobe = async () => {
     // GLOBE
     .globeImageUrl(CONFIG.IMG_EARTH)
     .backgroundColor("rgba(0,0,0,0)")
-    // .width(window.innerWidth * 2)
-    // .height(window.innerHeight * 2)
-    .globeOffset([0, CONFIG.GLOBE_TOP])
+    // .width(CONFIG.GLOBE_WIDTH)
+    // .height(CONFIG.GLOBE_HEIGHT)
+    .globeOffset([CONFIG.GLOBE_LEFT, CONFIG.GLOBE_TOP])
     .pointOfView({ lat: 0, lng: 0, altitude })
     // ATMOSPHERE
     .showAtmosphere(true)

@@ -10,6 +10,37 @@
   </head>
 
   <body>
+    <nav id="controls" class="fixed top-4 right-4 z-50 flex flex-col gap-4 p-4 bg-black/50 text-white rounded none">
+      <label for="zoom">
+        <span>Zoom</span>
+        <input type="range" id="zoom" name="zoom" min="1" max="10" value="5" data-zoom="5">
+        <input type="number" id="zoomInput" name="zoom" min="1" max="10" value="5" data-zoom="5">
+      </label>
+
+      <label for="position">
+        <span>Position</span>
+        <input type="range" id="position" name="position" min="0" max="360" value="180">
+        <input type="number" id="positionInput" name="position" min="0" max="360" value="180">
+      </label>
+
+      <label for="tilt">
+        <span>Tilt</span>
+        <input type="range" id="tilt" name="tilt" min="0" max="360" value="180">
+        <input type="number" id="tiltInput" name="tilt" min="0" max="360" value="180">
+      </label>
+
+      <label for="label">
+        <span>Label</span>
+        <input type="range" id="label" name="label" min="0" max="360" value="180">
+        <input type="number" id="labelInput" name="label" min="0" max="360" value="180">
+      </label>
+
+      <label for="dot">
+        <span>Dot</span>
+        <input type="range" id="dot" name="dot" min="0" max="360" value="180">
+        <input type="number" id="dotInput" name="dot" min="0" max="360" value="180">
+      </label>
+    </nav>
     <section class="relative h-svh overflow-hidden">
       <header class="h-36 md:h-35 bg-blue-950 brightness-125 hidden"></header>
       <!-- HERO SECTION
@@ -90,7 +121,7 @@
             </div>
           </div>
         </div>
-        <div class="overlay bg-linear-to-b from-transparent from-65% md:from-75% to-black to-90% md:to-95%">
+        <div class="overlay bg-linear-to-b from-transparent from-65% md:from-70% to-black to-90% md:to-95%">
         </div>
       </div>
     </section>
