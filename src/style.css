@@ -16,15 +16,15 @@
 }
 
 @layer base {
-	input::-webkit-outer-spin-button,	
+	input::-webkit-outer-spin-button,
 	input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0; 
+		-webkit-appearance: none;
+		margin: 0;
 	}
 
-input[type=number] {
-    -moz-appearance:textfield; /* Firefox */
-}
+	input[type="number"] {
+		-moz-appearance: textfield; /* Firefox */
+	}
 }
 .bg-image {
 	@apply object-cover absolute inset-0 -z-1 w-full h-full;
@@ -41,13 +41,13 @@ input[type=number] {
 	@apply absolute inset-0 pointer-events-none;
 }
 
-
 /* ---------------------------------------- */
 /* 7) GLOBE / MAP SECTIONS                  */
 /* ---------------------------------------- */
 /* Indicators */
 #indicators .indicator {
-	@apply w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white opacity-15 cursor-pointer;
+	@apply w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white opacity-15
+		cursor-pointer;
 }
 #indicators .indicator:is(.active) {
 	@apply opacity-100 bg-blue-500;
@@ -79,14 +79,16 @@ input[type=number] {
 }
 
 #controls input[type="number"] {
-	@apply bg-gray-800 px-1 py-1 text-xs w-8 border-1 border-gray-600/70 text-right rounded;
+	@apply bg-gray-800 px-1 py-1 text-xs w-8 border-1 border-gray-600/70
+		text-right rounded;
 }
 
 /* ---------------------------------------- */
 /* 4) BUTTONS & COMMON UI ELEMENTS         */
 /* ---------------------------------------- */
 .btn {
-	@apply flex gap-4 items-center justify-center px-6 py-4 text-sm font-semibold text-white rounded-lg overflow-hidden uppercase cursor-pointer;
+	@apply flex gap-4 items-center justify-center px-6 py-4 text-sm font-semibold
+		text-white rounded-lg overflow-hidden uppercase cursor-pointer;
 }
 .btn-text {
 	@apply font-normal normal-case p-0;
@@ -101,7 +103,8 @@ input[type=number] {
 	@apply bg-transparent;
 }
 .btn-navigation {
-	@apply flex-none absolute w-1/2 h-full flex items-center px-6 py-4 cursor-pointer;
+	@apply flex-none absolute w-1/2 h-full flex items-center px-6 py-4
+		cursor-pointer;
 }
 
 #content .btn {
@@ -124,7 +127,7 @@ input[type=number] {
 }
 .svg-marker {
 	@apply origin-bottom -translate-y-3 md:-translate-y-1 relative z-1;
-	background-image: url('/images/icons/mapmarker.svg');
+	background-image: url("/images/icons/mapmarker.svg");
 }
 .svg-marker.active {
 	@apply inline-block scale-[3] md:scale-[4] -translate-y-5;
