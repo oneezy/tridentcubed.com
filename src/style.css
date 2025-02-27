@@ -64,7 +64,7 @@
 	@apply font-mono text-3xl font-extrabold;
 }
 .stat-container .stat-label {
-	@apply text-xxs uppercase opacity-60 tracking-widest;
+	@apply text-xxs uppercase opacity-65 tracking-wide font-normal;
 }
 
 /* Controls */

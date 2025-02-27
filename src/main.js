@@ -2,12 +2,13 @@ import Globe from "globe.gl";
 import { derived, effect, signal } from "./lib/signals.js";
 import { mq } from "./lib/mq.js";
 import { counter } from "./lib/counter.js";
+import { createAutoPlay } from "./lib/autoPlay.js";
 import "./style.css";
 
 // -----------------------------------------------------------------------------
 // Constants & Configuration
 // -----------------------------------------------------------------------------
-// 1. Window dimensions for responsive calculations (atom_1.5)
+// 1. Window dimensions for responsive calculations
 const windowDimensions = signal({
   width: window.innerWidth,
   height: window.innerHeight,
@@ -21,7 +22,7 @@ window.addEventListener("resize", () => {
   };
 });
 
-// 2. Basic configuration settings (atom_2)
+// 2. Basic configuration settings
 // Google Sheet: https://docs.google.com/spreadsheets/d/1_BNtsJr9TaSYRPFAKcAd9pa_TUQyYBfqEZiDvDvkPTw/
 const CONFIG = derived(() => {
   const w = windowDimensions.value.width;
@@ -66,6 +67,12 @@ const CONFIG = derived(() => {
 
     // ANIMATION
     ANIMATION_DURATION: 1000,
+
+    // AUTO PLAY
+    AUTO_PLAY: true,
+    AUTO_PLAY_INTERVAL: 5000, // milliseconds between location changes
+    AUTO_PLAY_PAUSE_ON_INTERACTION: true, // pause when user interacts
+    AUTO_PLAY_RESUME_DELAY: 30000, // milliseconds before resuming after pause
   };
 });
 
@@ -77,6 +84,7 @@ const locations = signal([]);
 const ports = signal([]);
 const currentIndex = signal(0);
 const globeInstance = signal(null);
+const autoPlayInstance = signal(null); // Add signal to store autoPlay instance
 
 // 4. Derived state values
 const currentLocation = derived(() => {
@@ -235,8 +243,8 @@ effect(() => {
 
 // 11. Update stats counters when data is loaded (effect_6)
 effect(() => {
-  const locationsCounter = document.getElementById("locations-counter");
-  const portsCounter = document.getElementById("ports-counter");
+  const locationsCounter = document.querySelector("#locations-counter");
+  const portsCounter = document.querySelector("#ports-counter");
 
   if (locationsCounter) {
     locationsCounter.setAttribute("data-target", locations.value.length);
@@ -248,7 +256,13 @@ effect(() => {
 
   // Trigger counter animation when values change
   if (locations.value.length > 0 || ports.value.length > 0) {
-    counter();
+    counter({
+      easingType: "inOut",
+      easingPower: 3,
+      duration: 3000,
+      finalValueThreshold: 0.75, // Start approaching final value earlier
+      displayFinalValueThreshold: 0.97, // Show exact final value at 97% of duration
+    });
   }
 });
 
@@ -334,6 +348,18 @@ const avoidLabelCollisions = (labels) => {
   });
 };
 
+// 20. Handles keyboard navigation (atom_14)
+const handleKeyboardNavigation = (event) => {
+  // Only respond to left and right arrow keys
+  if (event.key === "ArrowLeft") {
+    changeLocation(currentIndex.value - 1);
+    event.preventDefault();
+  } else if (event.key === "ArrowRight") {
+    changeLocation(currentIndex.value + 1);
+    event.preventDefault();
+  }
+};
+
 // -----------------------------------------------------------------------------
 // Globe Setup & Management
 // -----------------------------------------------------------------------------
@@ -404,6 +430,48 @@ const setupGlobe = async () => {
       // Set first location after globe is ready
       if (locations.value.length > 0) {
         currentIndex.value = 0; // Trigger all the effects
+
+        // Setup autoplay with modular approach
+        if (config.AUTO_PLAY) {
+          const interactionElements = [
+            document.querySelector("#globe"),
+            document.querySelector("#indicators"),
+            document.querySelector("#content"),
+            document,
+          ];
+
+          // Create autoplay controller with the modular approach
+          const autoPlay = createAutoPlay(
+            config,
+            () => changeLocation(currentIndex.value + 1),
+            interactionElements,
+          );
+
+          // Store the autoPlay instance
+          autoPlayInstance.value = autoPlay;
+
+          // Start autoplay
+          autoPlay(true);
+
+          // Set up specific keyboard handling for autoplay
+          // 21. Setup keyboard navigation with autoplay integration (atom_15)
+          const handleKeyboardAutoPlay = () => {
+            if (config.AUTO_PLAY_PAUSE_ON_INTERACTION) {
+              // Dispatch a keyup event to trigger autoPlay pause logic
+              const keyupEvent = new Event("keyup", { bubbling: true });
+              document.dispatchEvent(keyupEvent);
+            }
+          };
+
+          // Add keyboard event listeners with autoPlay pause integration
+          document.addEventListener("keydown", (event) => {
+            // Handle navigation with arrow keys
+            if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+              handleKeyboardNavigation(event);
+              handleKeyboardAutoPlay();
+            }
+          });
+        }
       }
     });
 
@@ -417,6 +485,25 @@ const setupGlobe = async () => {
 // Event Listeners
 // -----------------------------------------------------------------------------
 window.addEventListener("resize", handleResize);
+
+// Clean up timers when page is hidden or unloaded
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && autoPlayInstance.value) {
+    // Pause autoplay when page is hidden
+    autoPlayInstance.value(false);
+  } else if (
+    document.visibilityState === "visible" &&
+    CONFIG.value.AUTO_PLAY &&
+    autoPlayInstance.value
+  ) {
+    // Resume autoplay when page becomes visible
+    autoPlayInstance.value(true);
+  }
+});
+
+window.addEventListener("unload", () => {
+  // No need to clear timers manually, they'll be cleaned up automatically
+});
 
 // 19. Initialize application (molecule_5)
 document.addEventListener("DOMContentLoaded", () => {
