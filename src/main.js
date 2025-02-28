@@ -72,7 +72,7 @@ const CONFIG = derived(() => {
     AUTO_PLAY: true,
     AUTO_PLAY_INTERVAL: 5000, // milliseconds between location changes
     AUTO_PLAY_PAUSE_ON_INTERACTION: true, // pause when user interacts
-    AUTO_PLAY_RESUME_DELAY: 30000, // milliseconds before resuming after pause
+    AUTO_PLAY_RESUME_DELAY: 60000, // milliseconds before resuming after pause
   };
 });
 
