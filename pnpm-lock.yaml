@@ -17,6 +17,9 @@ importers:
       tailwindcss:
         specifier: ^4.0.8
         version: 4.0.8
+      three:
+        specifier: ^0.174.0
+        version: 0.174.0
     devDependencies:
       vite:
         specifier: ^6.1.1
@@ -635,8 +638,8 @@ packages:
     peerDependencies:
       three: '>=0.154'
 
-  three@0.173.0:
-    resolution: {integrity: sha512-AUwVmViIEUgBwxJJ7stnF0NkPpZxx1aZ6WiAbQ/Qq61h6I9UR4grXtZDmO8mnlaNORhHnIBlXJ1uBxILEKuVyw==}
+  three@0.174.0:
+    resolution: {integrity: sha512-p+WG3W6Ov74alh3geCMkGK9NWuT62ee21cV3jEnun201zodVF4tCE5aZa2U122/mkLRmhJJUQmLLW1BH00uQJQ==}
 
   tinycolor2@1.6.0:
     resolution: {integrity: sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==}
@@ -1030,9 +1033,9 @@ snapshots:
       '@tweenjs/tween.js': 25.0.0
       accessor-fn: 1.5.1
       kapsule: 1.16.0
-      three: 0.173.0
-      three-globe: 2.41.12(three@0.173.0)
-      three-render-objects: 1.39.0(three@0.173.0)
+      three: 0.174.0
+      three-globe: 2.41.12(three@0.174.0)
+      three-render-objects: 1.39.0(three@0.174.0)
 
   graceful-fs@4.2.11: {}
 
@@ -1152,7 +1155,7 @@ snapshots:
 
   tapable@2.2.1: {}
 
-  three-conic-polygon-geometry@2.1.2(three@0.173.0):
+  three-conic-polygon-geometry@2.1.2(three@0.174.0):
     dependencies:
       '@turf/boolean-point-in-polygon': 7.2.0
       d3-array: 3.2.4
@@ -1161,16 +1164,16 @@ snapshots:
       d3-scale: 4.0.2
       delaunator: 5.0.1
       earcut: 3.0.1
-      three: 0.173.0
+      three: 0.174.0
 
-  three-geojson-geometry@2.1.1(three@0.173.0):
+  three-geojson-geometry@2.1.1(three@0.174.0):
     dependencies:
       d3-geo: 3.1.1
       d3-interpolate: 3.0.1
       earcut: 3.0.1
-      three: 0.173.0
+      three: 0.174.0
 
-  three-globe@2.41.12(three@0.173.0):
+  three-globe@2.41.12(three@0.174.0):
     dependencies:
       '@tweenjs/tween.js': 25.0.0
       accessor-fn: 1.5.1
@@ -1185,29 +1188,29 @@ snapshots:
       h3-js: 4.1.0
       index-array-by: 1.4.2
       kapsule: 1.16.0
-      three: 0.173.0
-      three-conic-polygon-geometry: 2.1.2(three@0.173.0)
-      three-geojson-geometry: 2.1.1(three@0.173.0)
-      three-slippy-map-globe: 1.0.3(three@0.173.0)
+      three: 0.174.0
+      three-conic-polygon-geometry: 2.1.2(three@0.174.0)
+      three-geojson-geometry: 2.1.1(three@0.174.0)
+      three-slippy-map-globe: 1.0.3(three@0.174.0)
       tinycolor2: 1.6.0
 
-  three-render-objects@1.39.0(three@0.173.0):
+  three-render-objects@1.39.0(three@0.174.0):
     dependencies:
       '@tweenjs/tween.js': 25.0.0
       accessor-fn: 1.5.1
       float-tooltip: 1.7.3
       kapsule: 1.16.0
       polished: 4.3.1
-      three: 0.173.0
+      three: 0.174.0
 
-  three-slippy-map-globe@1.0.3(three@0.173.0):
+  three-slippy-map-globe@1.0.3(three@0.174.0):
     dependencies:
       d3-geo: 3.1.1
       d3-octree: 1.1.0
       d3-scale: 4.0.2
-      three: 0.173.0
+      three: 0.174.0
 
-  three@0.173.0: {}
+  three@0.174.0: {}
 
   tinycolor2@1.6.0: {}
 

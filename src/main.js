@@ -36,12 +36,12 @@ const CONFIG = derived(() => {
       "https://opensheet.justinoneill2007.workers.dev/1_BNtsJr9TaSYRPFAKcAd9pa_TUQyYBfqEZiDvDvkPTw/ports",
 
     // GLOBE
-    IMG_EARTH:
-      "https://unpkg.com/three-globe@2.41.12/example/img/earth-blue-marble.jpg",
+    IMG_EARTH: "/images/skins/earth-blue-marble.jpg",
 
     GLOBE_WIDTH: mq(w, w),
     GLOBE_HEIGHT: mq(h, h),
     GLOBE_LEFT: mq(0, 0),
+
     // Position
     POV_ALTITUDE: mq(0.8, 0.2),
     GLOBE_TOP: mq(h * 0.8, h * 1.7),
@@ -53,17 +53,29 @@ const CONFIG = derived(() => {
 
     // LABELS
     LABEL_SIZE: mq(0.8, 0.3),
-    LABEL_DOT_RADIUS: mq(0.3, 0.2),
+    LABEL_DOT_RADIUS: mq(0.3, 0.1),
     LABEL_TEXT_COLOR: "rgba(255, 255, 255, 1)",
     LABEL_DOT_COLOR: "lime",
     LABEL_POSITION: "bottom",
 
-    // RINGS
+    // RINGS & ARCS - Updated with new configuration
     RING_COLOR_LOCATION: "#ffffff",
-    RING_MAX_RADIUS: 3,
-    RING_PROPAGATION_SPEED: 1,
+    RING_MAX_RADIUS: mq(4, 2),
+    RING_PROPAGATION_SPEED: mq(4, 2), // deg/sec
     RING_REPEAT_PERIOD: 1000,
-    RING_ALTITUDE: 0.001,
+    RING_ALTITUDE: 0,
+
+    // ARCS
+    ARC_RELATIVE_LENGTH: 0.4, // relative to whole arc
+    ARC_FLIGHT_TIME: 2000, // ms
+    ARC_NUM_RINGS: 5,
+    ARC_STROKE: mq(0.2, 0.05),
+    ARC_DASH_LENGTH: 0.4, // relative length
+    ARC_DASH_GAP: 2, // relative to dash length
+    ARC_DASH_INITIAL_GAP: 1, // relative to dash length
+    ARC_ALTITUDE: mq(null, null),
+    ARC_ALTITUDE_AUTOSCALE: mq(0.3, 0.2),
+    ARC_COLOR: "rgba(255, 255, 255, 1)", // skyblue with some transparency
 
     // ANIMATION
     ANIMATION_DURATION: 1000,
@@ -85,6 +97,13 @@ const ports = signal([]);
 const currentIndex = signal(0);
 const globeInstance = signal(null);
 const autoPlayInstance = signal(null); // Add signal to store autoPlay instance
+// 22. Track when arcs should be displayed (atom_16)
+const showArcs = signal(false);
+// Track previous location for arc animations
+const previousLocation = signal(null);
+// Track active arcs and rings
+const activeArcs = signal([]);
+const activeRings = signal([]);
 
 // 4. Derived state values
 const currentLocation = derived(() => {
@@ -96,6 +115,24 @@ const currentPorts = derived(() => {
   return ports.value.filter((port) =>
     port.location === currentLocation.value.location
   );
+});
+
+// New derived signal for arcs data
+const locationPortArcs = derived(() => {
+  const location = currentLocation.value;
+  const relevantPorts = currentPorts.value;
+
+  if (!location || !relevantPorts.length) return [];
+
+  return relevantPorts.map((port) => ({
+    startLat: location.lat,
+    startLng: location.lng,
+    endLat: port.lat,
+    endLng: port.lng,
+    port: port.port,
+    city: port.city,
+    // color: "rgba(255, 255, 255, 0.8)",
+  }));
 });
 
 // -----------------------------------------------------------------------------
@@ -117,28 +154,125 @@ const fetchData = async () => {
 };
 
 // -----------------------------------------------------------------------------
+// Arc & Ring Animation Functions
+// -----------------------------------------------------------------------------
+// 26. Emit arc from one location to another (atom_20)
+const emitArc = (startLocation, endLocation, config) => {
+  if (!startLocation || !endLocation || !globeInstance.value) return;
+
+  const startLat = parseFloat(startLocation.lat);
+  const startLng = parseFloat(startLocation.lng);
+  const endLat = parseFloat(endLocation.lat);
+  const endLng = parseFloat(endLocation.lng);
+
+  const globe = globeInstance.value;
+  const FLIGHT_TIME = config.ARC_FLIGHT_TIME;
+  const ARC_REL_LEN = config.ARC_RELATIVE_LENGTH;
+
+  // Create and add the arc
+  const arc = { startLat, startLng, endLat, endLng, color: config.ARC_COLOR };
+  const newArcs = [...activeArcs.value, arc];
+  activeArcs.value = newArcs;
+  globe.arcsData(newArcs);
+
+  // Remove arc after animation completes
+  setTimeout(() => {
+    activeArcs.value = activeArcs.value.filter((d) => d !== arc);
+    globe.arcsData(activeArcs.value);
+  }, FLIGHT_TIME * 2);
+
+  // Add start location rings
+  const startRing = { lat: startLat, lng: startLng };
+  const newStartRings = [...activeRings.value, startRing];
+  activeRings.value = newStartRings;
+  globe.ringsData(newStartRings);
+
+  // Remove start rings after partial animation
+  setTimeout(() => {
+    activeRings.value = activeRings.value.filter((r) => r !== startRing);
+    globe.ringsData(activeRings.value);
+  }, FLIGHT_TIME * ARC_REL_LEN);
+
+  // Add end location rings with delay
+  setTimeout(() => {
+    const endRing = { lat: endLat, lng: endLng };
+    const newEndRings = [...activeRings.value, endRing];
+    activeRings.value = newEndRings;
+    globe.ringsData(newEndRings);
+
+    // Remove end rings after partial animation
+    setTimeout(() => {
+      activeRings.value = activeRings.value.filter((r) => r !== endRing);
+      globe.ringsData(activeRings.value);
+    }, FLIGHT_TIME * ARC_REL_LEN);
+  }, FLIGHT_TIME);
+
+  // After all animations, set current location to active
+  setTimeout(() => {
+    globe.ringsData([endLocation]);
+  }, FLIGHT_TIME * (1 + ARC_REL_LEN));
+};
+
+// -----------------------------------------------------------------------------
 // UI Effects
 // -----------------------------------------------------------------------------
 // 6. Update globe rings and view when current location changes (effect_1)
 effect(() => {
   const globe = globeInstance.value;
   const location = currentLocation.value;
-  const config = CONFIG.value; // Access CONFIG as a signal value
+  const prevLoc = previousLocation.value;
+  const config = CONFIG.value;
 
   if (!globe || !location) return;
 
-  // Update rings data to only show for current location
-  globe.ringsData([location]);
+  // Clear any existing rings immediately
+  globe.ringsData([]);
 
-  // Update globe view
-  globe.pointOfView(
-    {
-      lat: parseFloat(location.lat) - config.POV_LATITUDE,
-      lng: parseFloat(location.lng),
-      altitude: config.POV_ALTITUDE,
-    },
-    config.ANIMATION_DURATION,
-  );
+  // First time initialization - single ring animation
+  if (!prevLoc) {
+    const ring = { lat: location.lat, lng: location.lng };
+    setTimeout(() => {
+      globe.ringsData([ring]);
+
+      // Remove ring after animation
+      setTimeout(() => {
+        globe.ringsData([]);
+      }, config.ARC_FLIGHT_TIME * config.ARC_RELATIVE_LENGTH);
+    }, 100);
+
+    previousLocation.value = location;
+
+    // Update globe view
+    globe.pointOfView(
+      {
+        lat: parseFloat(location.lat) - config.POV_LATITUDE,
+        lng: parseFloat(location.lng),
+        altitude: config.POV_ALTITUDE,
+      },
+      config.ANIMATION_DURATION,
+    );
+
+    return;
+  }
+
+  // Location change - emit arc and ring animations
+  if (prevLoc !== location) {
+    // Emit arc animation (which handles its own ring animations)
+    emitArc(prevLoc, location, config);
+
+    // Update previous location for next change
+    previousLocation.value = location;
+
+    // Update globe view
+    globe.pointOfView(
+      {
+        lat: parseFloat(location.lat) - config.POV_LATITUDE,
+        lng: parseFloat(location.lng),
+        altitude: config.POV_ALTITUDE,
+      },
+      config.ANIMATION_DURATION,
+    );
+  }
 });
 
 // 7. Update content panel when current location or ports change (effect_2)
@@ -220,25 +354,32 @@ effect(() => {
 effect(() => {
   const globe = globeInstance.value;
   const ports = currentPorts.value;
+  const config = CONFIG.value;
 
   if (!globe || !ports.length) {
     if (globe) globe.labelsData([]);
     return;
   }
 
-  // Avoid label collisions by adjusting orientation
-  const adjustedPorts = avoidLabelCollisions(
-    ports.map((port) => ({
+  // Clear existing labels immediately
+  globe.labelsData([]);
+
+  // Add delay to match arc animation timing
+  setTimeout(() => {
+    // Create initial label data
+    const labelData = ports.map((port) => ({
       lat: port.lat,
       lng: port.lng,
       label: port.city || "Unknown Port",
-      color: [CONFIG.value.LABEL_TEXT_COLOR, CONFIG.value.LABEL_DOT_COLOR],
-      size: CONFIG.value.LABEL_SIZE,
-      dotRadius: CONFIG.value.LABEL_DOT_RADIUS,
-    })),
-  );
+      size: config.LABEL_SIZE,
+      dotRadius: config.LABEL_DOT_RADIUS,
+      orientation: "bottom", // default orientation
+    }));
 
-  globe.labelsData(adjustedPorts);
+    // Apply collision detection
+    const adjustedLabels = avoidLabelCollisions(labelData);
+    globe.labelsData(adjustedLabels);
+  }, config.ARC_FLIGHT_TIME);
 });
 
 // 11. Update stats counters when data is loaded (effect_6)
@@ -263,6 +404,22 @@ effect(() => {
       finalValueThreshold: 0.75, // Start approaching final value earlier
       displayFinalValueThreshold: 0.97, // Show exact final value at 97% of duration
     });
+  }
+});
+
+// New effect to update arcs when current location or ports change
+effect(() => {
+  const globe = globeInstance.value;
+  const arcs = locationPortArcs.value;
+  const shouldShowArcs = showArcs.value;
+
+  if (!globe) return;
+
+  // 25. Only show arcs when showArcs is true (atom_19)
+  if (shouldShowArcs) {
+    globe.arcsData(arcs);
+  } else {
+    globe.arcsData([]);
   }
 });
 
@@ -331,19 +488,38 @@ const getRingColor = (t) => `rgba(255,255,255,${Math.sqrt(1 - t)})`;
 
 // 17. Avoid label collisions (atom_13)
 const avoidLabelCollisions = (labels) => {
-  const occupiedSpots = new Set();
+  // Create a grid to track occupied spaces
+  const grid = new Map();
+  const gridSize = 5; // degrees
+
+  const getGridKey = (lat, lng) => {
+    const latGrid = Math.floor(lat / gridSize);
+    const lngGrid = Math.floor(lng / gridSize);
+    return `${latGrid},${lngGrid}`;
+  };
 
   return labels.map((label) => {
-    const key = `${Math.round(label.lat)},${Math.round(label.lng)}`;
+    const key = getGridKey(label.lat, label.lng);
 
-    // If the spot is already occupied, flip orientation
-    if (occupiedSpots.has(key)) {
-      label.orientation = "top"; // Move above
+    if (grid.has(key)) {
+      // Space is occupied, try different orientations
+      const existing = grid.get(key);
+      if (existing.orientation === "bottom") {
+        label.orientation = "top";
+      } else if (existing.orientation === "top") {
+        label.orientation = "right";
+      } else if (existing.orientation === "right") {
+        label.orientation = "left";
+      } else {
+        // If all positions are taken, offset slightly
+        label.lat += gridSize * 0.2;
+        label.orientation = "bottom";
+      }
     } else {
-      label.orientation = "bottom"; // Default position
-      occupiedSpots.add(key); // Mark spot as occupied
+      label.orientation = "bottom";
     }
 
+    grid.set(key, label);
     return label;
   });
 };
@@ -383,14 +559,30 @@ const setupGlobe = async () => {
     .showAtmosphere(true)
     .atmosphereColor("#00bcff")
     .atmosphereAltitude(mq(0.2, 0.1))
-    // RINGS
+    // RINGS - Start with empty data to prevent initial infinite animation
     .ringLat((d) => d.lat)
     .ringLng((d) => d.lng)
     .ringAltitude(config.RING_ALTITUDE)
-    .ringColor(() => getRingColor)
+    .ringColor(() => (t) => `rgba(255,255,255,${1 - t})`)
     .ringMaxRadius(config.RING_MAX_RADIUS)
     .ringPropagationSpeed(config.RING_PROPAGATION_SPEED)
-    .ringRepeatPeriod(config.RING_REPEAT_PERIOD)
+    .ringResolution(64)
+    .ringsData([]) // Start with no rings
+    .ringRepeatPeriod(
+      config.ARC_FLIGHT_TIME * config.ARC_RELATIVE_LENGTH /
+        config.ARC_NUM_RINGS,
+    )
+    // ARCS
+    .arcColor("color")
+    .arcStroke(config.ARC_STROKE)
+    .arcDashLength(config.ARC_DASH_LENGTH)
+    .arcDashGap(config.ARC_DASH_GAP)
+    .arcDashInitialGap(config.ARC_DASH_INITIAL_GAP)
+    .arcDashAnimateTime(config.ARC_FLIGHT_TIME)
+    .arcAltitude(config.ARC_ALTITUDE)
+    .arcAltitudeAutoScale(config.ARC_ALTITUDE_AUTOSCALE)
+    .arcsTransitionDuration(0)
+    .arcLabel((d) => `${d.port || "Port"} - ${d.city || "Unknown"}`)
     // POINTS
     .pointsData(locations.value)
     .pointAltitude(() => config.POINT_ALTITUDE)
@@ -420,18 +612,21 @@ const setupGlobe = async () => {
     .htmlAltitude(0.01)
     // LABELS
     .labelColor(() => config.LABEL_TEXT_COLOR)
-    .labelDotOrientation((d) => d.orientation || "bottom")
+    .labelDotOrientation((d) => d.orientation) // Use the orientation determined by collision detection
     .labelDotRadius(() => config.LABEL_DOT_RADIUS)
     .labelSize(() => config.LABEL_SIZE)
     .labelText("label")
-    .labelLabel((d) => `<div></div>`)
+    .labelLabel((d) => `<div>${d.label}</div>`) // Use the label property we set
     // FIRST LOAD
     .onGlobeReady(() => {
       // Set first location after globe is ready
       if (locations.value.length > 0) {
-        currentIndex.value = 0; // Trigger all the effects
+        // Initialize first location without animation
+        const firstLocation = locations.value[0];
+        globe.ringsData([firstLocation]); // Set initial ring
+        currentIndex.value = 0; // This will trigger the regular ring animation through the effect
 
-        // Setup autoplay with modular approach
+        // Rest of initialization
         if (config.AUTO_PLAY) {
           const interactionElements = [
             document.querySelector("#globe"),
@@ -476,6 +671,13 @@ const setupGlobe = async () => {
     });
 
   globe.controls().enableZoom = false;
+  // globe.controls().autoRotate = true;
+  // globe.controls().autoRotateSpeed = -0.5;
+  // globe.controls().minPolarAngle = Math.PI / 2;
+  // globe.controls().maxPolarAngle = Math.PI / 2;
+  // globe.controls().enableRotate = true;
+  // globe.controls().rotateSpeed = -0.5;
+
   globeInstance.value = globe; // Set the globe instance signal
 
   setupIndicators();
@@ -502,11 +704,11 @@ document.addEventListener("visibilitychange", () => {
 });
 
 window.addEventListener("unload", () => {
-  // No need to clear timers manually, they'll be cleaned up automatically
+  clearTimeout(window.arcsTimeout);
 });
 
 // 19. Initialize application (molecule_5)
 document.addEventListener("DOMContentLoaded", () => {
   setupGlobe();
-  window.dispatchEvent(new Event("resize")); // Trigger initial resize
+  window.dispatchEvent(new Event("resize"));
 });

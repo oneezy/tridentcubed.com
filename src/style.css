@@ -153,7 +153,7 @@
 	mask-image: url("https://api.iconify.design/tabler:speedboat-filled.svg?color=%23000000");
 }
 .icon-ship {
-	mask-image: url("https://api.iconify.design/ic:sharp-directions-boat.svg?color=%23000000");
+	mask-image: url("/images/icons/ship.svg");
 }
 .icon-captain {
 	mask-image: url("https://api.iconify.design/game-icons:captain-hat-profile.svg?color=%23000000");
