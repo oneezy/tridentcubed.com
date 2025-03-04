@@ -9,6 +9,8 @@
 	--default-font-family: "Roboto Condensed", sans-serif;
 	--default-mono-font-family: "Roboto Mono", monospace;
 	--text-xxs: 0.7rem;
+	--color-primary: var(--color-blue-800);
+	--color-secondary: var(--color-slate-600);
 }
 
 .none {
@@ -23,6 +25,7 @@
 	}
 
 	input[type="number"] {
+		appearance: textfield;
 		-moz-appearance: textfield; /* Firefox */
 	}
 }
@@ -88,16 +91,19 @@
 /* ---------------------------------------- */
 .btn {
 	@apply flex gap-4 items-center justify-center px-6 py-4 text-sm font-semibold
-		text-white rounded-lg overflow-hidden uppercase cursor-pointer;
+		text-white rounded-lg overflow-hidden uppercase cursor-pointer transition-all;
 }
 .btn-text {
 	@apply font-normal normal-case p-0;
 }
 .btn-primary {
-	@apply min-w-[200px] bg-blue-800;
+	@apply min-w-[200px] bg-primary hover:bg-primary/100;
+}
+.btn-hero {
+	@apply min-w-[200px] bg-linear-to-b from-primary to-primary/70 hover:bg-primary/100 ;
 }
 .btn-secondary {
-	@apply bg-slate-600;
+	@apply bg-secondary;
 }
 .btn-ghost {
 	@apply bg-transparent;
@@ -114,23 +120,44 @@
 	@apply text-white w-4 h-4;
 }
 
-/* ---------------------------------------- */
-/* 5) ICON CLASSES                          */
-/* ---------------------------------------- */
 
 /* ---------------------------------------- */
 /* 6) EXTRA ICONS / MAP MARKERS            */
 /* ---------------------------------------- */
-/* Additional .svg usage */
+/* SVG Marker */
 .svg {
-	@apply block w-6 h-6 bg-center bg-no-repeat bg-contain cursor-pointer;
+	@apply block w-6 h-6 cursor-pointer;
 }
 .svg-marker {
-	@apply origin-bottom -translate-y-3 md:-translate-y-1 relative z-1;
-	background-image: url("/images/icons/mapmarker.svg");
+	@apply relative z-1 origin-bottom transition-all duration-500;
 }
+.svg-marker * {
+	@apply transition-all duration-500;
+}
+.svg-marker .stroke {
+	@apply stroke-white opacity-0;
+}
+.svg-marker .bg {
+	@apply fill-white;
+}
+.svg-marker:not(.active) .fg {
+	@apply fill-primary;
+}
+
+/* SVG Marker (active) */
 .svg-marker.active {
-	@apply inline-block scale-[3] md:scale-[4] -translate-y-5;
+	@apply inline-block -translate-y-4 scale-250 md:scale-350 md:translate-y-0;
+	animation: float 6s ease-in-out infinite;
+}
+
+.svg-marker.active .stroke {
+	@apply stroke-white opacity-100;
+}
+.svg-marker.active .bg {
+	@apply fill-white;
+}
+.svg-marker.active .fg {
+	animation: blink 6s ease-in-out infinite;
 }
 
 .icon {
@@ -190,4 +217,32 @@
 }
 .icon-chevron-right {
 	mask-image: url("https://api.iconify.design/ic:outline-chevron-right.svg?color=%23000000");
+}
+
+/* ---------------------------------------- */
+/* ANIMATIONS                          */
+/* ---------------------------------------- */
+@keyframes float {
+	0% {
+		transform: translatey(0px);
+	}
+	50% {
+		transform: translatey(-2px);
+	}
+	100% {
+		transform: translatey(0px);
+	}
+}
+
+@keyframes blink {
+	0% {
+		fill: var(--color-primary);
+	}
+	50% {
+		fill: var(--color-primary);
+		opacity: 0.75;
+	}
+	100% {
+		fill: var(--color-primary);
+	}
 }

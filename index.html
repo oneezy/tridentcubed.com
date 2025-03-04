@@ -42,8 +42,8 @@
         <input type="number" id="dotInput" name="dot" min="0" max="360" value="180">
       </label>
     </nav>
-    <section class="relative h-svh overflow-hidden">
-      <header class="h-36 md:h-35 bg-blue-950 brightness-125 hidden"></header>
+    <section id="hero" class="relative h-svh overflow-hidden">
+      <header class="h-36 md:h-35 bg-blue-950 brightness-125"></header>
       <!-- HERO SECTION
       :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
       <div class="back">
@@ -60,7 +60,7 @@
         </div>
 
         <div
-          class="hero-container flex flex-col justify-center items-center gap-10 md:gap-10 text-white py-10 md:py-20">
+          class="hero-container flex flex-col justify-center items-center gap-4 md:gap-8 text-white py-10 md:py-10">
           <div
             class="grid gap-2 items-center text-center text-white">
             <strong
@@ -88,8 +88,8 @@
               <span class="stat-label">Ports</span>
             </section>
           </div>
-          <div class="flex gap-4 items-center justify-center z-100">
-            <a id="arcs" class="btn btn-primary" href="#">
+          <div class="flex items-center justify-center z-100">
+            <a class="btn btn-hero" href="#">
               <i class="icon icon-ship"></i>
               <!-- <i class="icon icon-wheel"></i> -->
               <!-- <i class="icon icon-boat"></i> -->
@@ -112,7 +112,7 @@
       :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
       <div class="absolute inset-0 w-screen h-svh overflow-hidden">
         <div
-          class="overlay bg-linear-to-b from-transparent from-60% to-sky-400 opacity-100">
+          class="overlay bg-linear-to-b from-transparent from-60% md:from-50% to-sky-400 opacity-100">
         </div>
         <div
           id="globe"
@@ -127,7 +127,7 @@
             </div>
           </div>
         </div>
-        <div class="overlay bg-linear-to-b from-transparent from-65% md:from-70% to-black to-90% md:to-95%">
+        <div class="overlay bg-linear-to-b from-transparent from-75% md:from-75% to-black to-90% md:to-95%">
         </div>
       </div>
     </section>
